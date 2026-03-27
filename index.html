@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Flota LIS Liviana</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f1e3d;--blue:#2563eb;--blue-h:#1d4ed8;--blue-lt:#eff6ff;
+  --green:#059669;--green-lt:#ecfdf5;--orange:#ea580c;--orange-lt:#fff7ed;
+  --red:#dc2626;--red-lt:#fef2f2;--amber:#d97706;--amber-lt:#fffbeb;
+  --purple:#7c3aed;--purple-lt:#f5f3ff;
+  --slate:#64748b;--border:#e2e8f0;--bg:#f8fafc;--card:#fff;
+  --text:#0f172a;--text2:#475569;--radius:10px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-lg:0 10px 40px rgba(0,0,0,.14);
+  --header-h:54px;--sidebar-w:252px;--bottomnav-h:60px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overscroll-behavior:none}
+
+header{background:var(--navy);color:#fff;padding:0 16px;height:var(--header-h);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;box-shadow:0 2px 14px rgba(0,0,0,.3);}
+.h-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.h-logo{width:30px;height:30px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.h-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;white-space:nowrap}
+.h-sub{font-size:9px;color:#94a3b8;margin-top:1px;white-space:nowrap}
+.h-nav{display:flex;gap:3px}
+.nbtn{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;background:transparent;color:#94a3b8;transition:all .15s;white-space:nowrap}
+.nbtn:hover{background:rgba(255,255,255,.08);color:#fff}
+.nbtn.on{background:var(--blue);color:#fff}
+.h-act{display:flex;gap:6px;align-items:center}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;transition:background .3s}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.offline{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-lbl{font-size:10px;color:#94a3b8;white-space:nowrap}
+
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:calc(100vh - var(--header-h))}
+aside{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:var(--header-h);height:calc(100vh - var(--header-h));overflow:hidden}
+.sb-top{padding:12px 12px 8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sb-lbl{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--slate)}
+.sb-cnt{font-size:11px;color:var(--blue);font-family:'DM Mono',monospace;font-weight:600}
+.day-list{overflow-y:auto;flex:1;padding:5px;-webkit-overflow-scrolling:touch}
+.di{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;transition:background .1s;user-select:none}
+.di:hover{background:var(--bg)}.di:active{background:var(--blue-lt)}.di.on{background:var(--blue-lt)}
+.di-lbl{font-size:12px;font-weight:600;color:var(--text)}.di.on .di-lbl{color:var(--blue)}
+.di-meta{font-size:10px;color:var(--slate);margin-top:1px}
+.di-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.pct-pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;font-family:'DM Mono',monospace}
+.p-ok{background:var(--green-lt);color:var(--green)}.p-warn{background:var(--amber-lt);color:var(--amber)}.p-bad{background:var(--red-lt);color:var(--red)}
+.meta-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}.dot-ok{background:var(--green)}.dot-bad{background:var(--red)}
+.sb-empty{padding:28px 14px;text-align:center;color:var(--slate);font-size:12px}
+
+.pg{overflow-y:auto;display:none;padding:18px 20px;min-height:calc(100vh - var(--header-h))}.pg.on{display:block}
+
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--navy);height:var(--bottomnav-h);z-index:200;border-top:1px solid rgba(255,255,255,.1);padding:0 4px;justify-content:space-around;align-items:center;box-shadow:0 -2px 20px rgba(0,0,0,.3);}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:8px;border:none;background:transparent;color:#94a3b8;font-family:inherit;cursor:pointer;transition:all .15s;font-size:10px;font-weight:600;flex:1;max-width:80px;}
+.mob-nav-btn .mn-icon{font-size:18px;line-height:1}.mob-nav-btn.on{color:#fff;background:rgba(37,99,235,.3)}.mob-nav-btn:active{background:rgba(255,255,255,.1)}
+
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:350;opacity:0;transition:opacity .25s;}
+.drawer-overlay.open{opacity:1}
+.drawer{position:fixed;left:0;top:var(--header-h);bottom:0;width:min(85vw,300px);background:var(--card);z-index:360;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,.2);}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.drawer-lbl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--slate)}
+.drawer-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--slate);padding:4px;line-height:1}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap;touch-action:manipulation}
+.btn:active{transform:scale(.96)}
+.bp{background:var(--blue);color:#fff}.bp:hover{background:var(--blue-h)}
+.bs{background:var(--green);color:#fff}.bs:hover{background:#047857}
+.bo{background:var(--card);color:var(--navy);border:1.5px solid var(--border)}.bo:hover{border-color:var(--blue);color:var(--blue)}
+.bg-h{background:transparent;color:#94a3b8;border:1.5px solid rgba(255,255,255,.2)}.bg-h:hover{background:rgba(255,255,255,.09)}
+.btn-sm{padding:4px 9px;font-size:11px;border-radius:5px}.btn-xs{padding:3px 7px;font-size:10px;border-radius:4px}
+
+.welcome{max-width:440px;margin:50px auto;text-align:center;padding:0 16px}
+.welcome .ico{font-size:48px;margin-bottom:12px;animation:fl 3s ease-in-out infinite;display:block}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.welcome h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:7px}
+.welcome p{color:var(--slate);line-height:1.6;margin-bottom:20px;font-size:13px}
+
+.kgrid{display:grid;gap:9px;margin-bottom:14px}
+.k5{grid-template-columns:repeat(5,1fr)}.k4{grid-template-columns:repeat(4,1fr)}
+.kpi{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:11px 13px;box-shadow:var(--sh);position:relative}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--slate);margin-bottom:2px}
+.kpi-val{font-size:26px;font-weight:800;font-family:'DM Mono',monospace;line-height:1}
+.kpi-sub{font-size:10px;color:var(--slate);margin-top:2px;line-height:1.35}
+.k-bl{border-top:3px solid var(--blue)}.k-gr{border-top:3px solid var(--green)}.k-gr .kpi-val{color:var(--green)}
+.k-or{border-top:3px solid var(--orange)}.k-or .kpi-val{color:var(--orange)}
+.k-am{border-top:3px solid var(--amber)}.k-am .kpi-val{color:var(--amber)}
+.k-pu{border-top:3px solid var(--purple)}.k-pu .kpi-val{color:var(--purple)}
+.prog{height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s}
+
+.meta-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.mb-ok{background:var(--green-lt);color:var(--green)}.mb-warn{background:var(--amber-lt);color:var(--amber)}.mb-bad{background:var(--red-lt);color:var(--red)}
+.meta-bar-wrap{margin-bottom:14px}
+.meta-bar-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:12px 16px;box-shadow:var(--sh);display:flex;align-items:center;gap:12px}
+.meta-icon{font-size:20px;flex-shrink:0}.meta-info{flex:1;min-width:0}
+.meta-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;margin-bottom:4px}
+.meta-track{height:9px;background:var(--border);border-radius:99px;overflow:hidden}
+.meta-fill{height:100%;border-radius:99px;transition:width .4s}
+.meta-marks{display:flex;justify-content:space-between;margin-top:2px;font-size:8px;color:var(--slate);font-family:'DM Mono',monospace}
+.meta-right{text-align:right;min-width:72px;flex-shrink:0}
+
+.tabs{display:flex;gap:3px;margin-bottom:13px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:3px;width:fit-content;max-width:100%;overflow-x:auto}
+.tab{padding:6px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--slate);transition:all .15s;border:none;background:transparent;font-family:inherit;white-space:nowrap;touch-action:manipulation}
+.tab.on{background:var(--blue);color:#fff;box-shadow:var(--sh)}
+
+.twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:0 0 var(--radius) var(--radius)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--bg)}
+tbody td{padding:8px 10px;vertical-align:middle}
+
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-in{background:var(--orange-lt);color:var(--orange)}.b-bl{background:var(--red-lt);color:var(--red)}.b-op{background:var(--green-lt);color:var(--green)}.b-re{background:var(--purple-lt);color:var(--purple)}
+.placa{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;color:var(--navy);background:var(--blue-lt);padding:2px 7px;border-radius:5px;letter-spacing:.4px;white-space:nowrap}
+.dp{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--amber-lt);color:var(--amber)}
+.dp.hi{background:var(--red-lt);color:var(--red)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;margin:2px;background:var(--blue-lt);color:var(--navy)}
+.chip span{background:var(--blue);color:#fff;border-radius:99px;padding:0 5px;font-size:9px;font-weight:800}
+
+.iform{background:var(--bg);border-radius:8px;padding:13px;margin:0 14px 11px;border:1.5px dashed var(--border)}
+.iform.on{border-color:var(--blue);background:var(--blue-lt)}
+.fg{display:grid;gap:9px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+label{display:block;font-size:10px;font-weight:700;color:var(--text2);margin-bottom:3px;letter-spacing:.3px}
+input,select{width:100%;padding:8px 9px;border-radius:6px;border:1.5px solid var(--border);font-family:inherit;font-size:13px;color:var(--text);background:#fff;transition:border .15s;outline:none;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+
+.acw{position:relative}
+.acl{position:absolute;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1.5px solid var(--blue);border-radius:8px;box-shadow:var(--sh-lg);z-index:500;max-height:200px;overflow-y:auto;display:none}
+.acl.open{display:block;animation:acIn .1s ease}
+@keyframes acIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.aci{padding:10px 12px;cursor:pointer;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);transition:background .08s}
+.aci:last-child{border-bottom:none}.aci:hover,.aci.sel,.aci:active{background:var(--blue-lt);color:var(--blue)}
+.ac-hi{color:var(--blue);font-weight:900;text-decoration:underline}.acdot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.ibtn{background:none;border:none;cursor:pointer;padding:5px 6px;border-radius:5px;color:var(--slate);transition:all .1s;font-size:14px;line-height:1;touch-action:manipulation}
+.ibtn:hover,.ibtn:active{background:var(--bg);color:var(--red)}
+.frow{display:flex;gap:7px;justify-content:flex-end;margin-top:9px}
+
+.panel{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--sh);margin-bottom:14px}
+.panel-hd{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ptitle{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;min-width:0}
+
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:400;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;box-shadow:var(--sh-lg);transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:90vh;overflow-y:auto}
+.overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px}
+.modal h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:13px}
+.modal-ft{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+
+#toast{position:fixed;bottom:calc(var(--bottomnav-h) + 12px);left:50%;transform:translateX(-50%) translateY(80px);z-index:999;background:var(--navy);color:#fff;padding:10px 18px;border-radius:22px;font-size:12px;font-weight:500;box-shadow:var(--sh-lg);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:7px;white-space:nowrap;max-width:calc(100vw - 32px)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+.fbar{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:11px 14px;margin-bottom:14px;display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap}
+.fbar label{font-size:10px;font-weight:700;color:var(--slate);display:block;margin-bottom:3px}
+.fbar select{width:auto;min-width:100px;font-size:12px}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.sc{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:14px;box-shadow:var(--sh)}
+.sc-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--slate);margin-bottom:10px}
+.ri{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
+.ri:last-child{border-bottom:none}
+.rpos{width:19px;height:19px;border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
+.rg1{background:#f59e0b}.rg2{background:#94a3b8}.rg3{background:#b45309}
+.rbw{flex:1;min-width:0}.rlbl{font-size:11px;font-weight:600;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbar{height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+.rfill{height:100%;border-radius:99px;background:var(--blue)}
+.rval{font-family:'DM Mono',monospace;font-size:12px;font-weight:800;color:var(--navy);flex-shrink:0}
+.ac-row{display:grid;grid-template-columns:82px 1fr 44px 40px;align-items:center;gap:7px;padding:3px 0}
+.ac-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--slate)}
+.ac-bw{height:13px;background:var(--border);border-radius:99px;overflow:hidden}
+.ac-bf{height:100%;border-radius:99px}
+.ac-pct{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;text-align:right}
+.meta-chart-row{display:grid;grid-template-columns:82px 1fr 32px 48px;align-items:center;gap:7px;padding:3px 0}
+.mcr-bar{height:13px;border-radius:99px;overflow:hidden;background:var(--border);position:relative}
+.mcr-fill{height:100%;border-radius:99px;position:absolute;left:0;top:0}
+.mcr-limit{position:absolute;top:0;height:100%;width:2px;background:var(--red);z-index:2}
+.mcr-val{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;text-align:right}
+.nodata{text-align:center;padding:24px;color:var(--slate);font-size:12px}
+
+.role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:inherit;}
+.rb-viewer{background:rgba(255,255,255,.1);color:#94a3b8}.rb-viewer:hover{background:rgba(255,255,255,.15);color:#fff}
+.rb-editor{background:rgba(5,150,105,.25);color:#6ee7b7}.rb-editor:hover{background:rgba(5,150,105,.35)}
+.read-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:999;display:flex;align-items:center;justify-content:center;}
+.read-card{background:#fff;border-radius:16px;padding:28px 28px 22px;width:320px;max-width:92vw;box-shadow:var(--sh-lg);text-align:center;}
+.read-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:6px}
+.read-card p{font-size:12px;color:var(--slate);margin-bottom:18px;line-height:1.5}
+.pin-row{display:flex;gap:8px;margin-bottom:14px}
+.pin-row input{flex:1;text-align:center;font-size:22px;font-family:'DM Mono',monospace;letter-spacing:6px;padding:10px;border-radius:8px;border:2px solid var(--border);outline:none;}
+.pin-row input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.pin-err{color:var(--red);font-size:11px;font-weight:600;margin-top:-8px;margin-bottom:10px;min-height:16px}
+
+.pg-gest-active aside{display:none !important}
+.pg-gest-active .app{grid-template-columns:1fr !important}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.cal-hdr{text-align:center;font-size:10px;font-weight:700;color:var(--slate);padding:4px;text-transform:uppercase}
+.cal-day{border-radius:8px;padding:6px 4px;text-align:center;min-height:54px;cursor:pointer;transition:all .15s;border:1.5px solid transparent;position:relative}
+.cal-day:hover{transform:scale(1.04);box-shadow:var(--sh)}.cal-day.cd-empty{background:transparent;cursor:default}
+.cal-day.cd-green{background:var(--green-lt);border-color:var(--green)}.cal-day.cd-amber{background:var(--amber-lt);border-color:var(--amber)}.cal-day.cd-red{background:var(--red-lt);border-color:var(--red)}.cal-day.cd-today{box-shadow:0 0 0 2.5px var(--blue)}
+.cal-dn{font-size:12px;font-weight:700;color:var(--text)}.cal-pct{font-size:11px;font-weight:800;font-family:'DM Mono',monospace}
+.cal-meta{width:6px;height:6px;border-radius:50%;margin:2px auto 0}
+.cal-month-nav{display:flex;align-items:center;gap:10px}
+.cal-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+.cal-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--slate)}
+.cal-leg-dot{width:10px;height:10px;border-radius:3px}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.dash-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;box-shadow:var(--sh)}
+.dash-card-full{grid-column:span 2}
+.dash-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--slate);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:grid;grid-template-columns:120px 1fr 44px;align-items:center;gap:10px}
+.bar-lbl{font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:16px;background:var(--border);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.bar-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;text-align:right}
+.trend-svg{width:100%;overflow:visible}
+.veh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.veh-card{background:var(--bg);border-radius:10px;border:2px solid var(--border);padding:12px;text-align:center;transition:all .2s;cursor:pointer}
+.veh-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--sh)}
+.veh-card.vc-ok{border-color:var(--green)}.veh-card.vc-warn{border-color:var(--amber)}.veh-card.vc-bad{border-color:var(--red)}
+.veh-car{font-size:28px;display:block;margin-bottom:4px;line-height:1}
+.veh-placa{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--navy)}
+.veh-dias{font-size:11px;font-weight:700;margin-top:2px}
+.veh-sist{font-size:9px;color:var(--slate);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:8px}
+.alert-item.a-red{background:var(--red-lt);border-left:3px solid var(--red)}.alert-item.a-amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.alert-item.a-green{background:var(--green-lt);border-left:3px solid var(--green)}
+.alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}.alert-txt{flex:1}
+.alert-title{font-size:12px;font-weight:700;margin-bottom:2px}.alert-sub{font-size:11px;color:var(--text2);line-height:1.4}
+.plan-item{background:var(--bg);border-radius:8px;border:1px solid var(--border);padding:12px;margin-bottom:8px}
+.plan-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.plan-mes{font-size:11px;font-weight:700;color:var(--blue);font-family:'DM Mono',monospace}
+.plan-falla{font-size:12px;font-weight:700;color:var(--text)}
+.plan-accion{font-size:11px;color:var(--text2);line-height:1.5;border-left:2px solid var(--blue);padding-left:8px;margin-top:4px}
+.plan-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:var(--green-lt);color:var(--green);white-space:nowrap}
+.month-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.mtab{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--card);color:var(--slate);transition:all .15s}
+.mtab.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.comp-row{display:grid;grid-template-columns:100px 1fr 1fr;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.comp-row:last-child{border-bottom:none}.comp-lbl{font-weight:600;color:var(--text2)}.comp-val{font-family:'DM Mono',monospace;font-weight:700;text-align:center}
+
+.pdf-btn{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.pdf-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(220,38,38,.4)}
+
+@media(max-width:768px){
+  .mob-nav{display:flex}
+  .app{grid-template-columns:1fr}
+  aside{display:none}
+  .pg{padding:14px 14px calc(var(--bottomnav-h) + 14px);min-height:calc(100vh - var(--header-h))}
+  .h-nav{display:none}.h-act .bg-h:not(.mob-keep){display:none}.h-sub{display:none}
+  .kgrid.k5{grid-template-columns:repeat(2,1fr)}.kgrid.k4{grid-template-columns:repeat(2,1fr)}
+  .kgrid.k5 .kpi:nth-child(5){grid-column:span 2}
+  .meta-marks{display:none}.agrid{grid-template-columns:1fr}
+  .fg.g4{grid-template-columns:1fr 1fr}.fg.g3{grid-template-columns:1fr 1fr}
+  .hide-mob{display:none}.modal{border-radius:16px 16px 0 0;max-height:92vh}
+  .btn-lbl{display:none}.dash-grid{grid-template-columns:1fr}.dash-card-full{grid-column:span 1}
+  .bar-row{grid-template-columns:80px 1fr 36px}.veh-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+}
+@media(max-width:420px){
+  .fg.g4{grid-template-columns:1fr}.fg.g3{grid-template-columns:1fr}.fg.g2{grid-template-columns:1fr}
+  .kgrid.k5 .kpi:nth-child(n){grid-column:span 1}.kgrid.k5{grid-template-columns:1fr 1fr}
+  header{padding:0 12px}.h-title{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-brand">
+    <div class="h-logo">🚐</div>
+    <div>
+      <div class="h-title">Flota LIS Liviana</div>
+      <div class="h-sub">Control de disponibilidad</div>
+    </div>
+  </div>
+  <div class="h-nav">
+    <button class="nbtn on" id="nav-r" onclick="setPage('reg')">📋 Registro</button>
+    <button class="nbtn" id="nav-a" onclick="setPage('an')">📊 Informe</button>
+    <button class="nbtn" id="nav-g" onclick="setPage('gest')">🚨 Gestión</button>
+    <button class="nbtn" id="nav-cal" onclick="setPage('cal')">📅 Calendario</button>
+  </div>
+  <div class="h-act">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:5px">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span class="sync-lbl" id="sync-lbl">Conectando…</span>
+      </div>
+      <button class="role-badge rb-viewer" id="role-badge" onclick="toggleAuth()">👁 Solo lectura</button>
+    </div>
+    <button class="btn bg-h btn-sm" onclick="showNDM()" id="btn-nuevo-dia">＋ Día</button>
+    <button class="btn bg-h btn-sm" onclick="doBackup()" title="Guardar respaldo local">💾</button>
+    <button class="btn bg-h btn-sm" onclick="openM('m-imp')" title="Restaurar desde archivo">📂</button>
+    <button class="btn bg-h btn-sm" onclick="doExcel()">⬇ Excel</button>
+  </div>
+</header>
+
+<div class="app">
+  <aside>
+    <div class="sb-top">
+      <span class="sb-lbl">Días</span>
+      <span class="sb-cnt" id="sb-cnt"></span>
+    </div>
+    <div style="padding:6px 8px;border-bottom:1px solid var(--border)">
+      <input id="sb-search" type="text" placeholder="🔍 Buscar fecha…"
+        style="font-size:11px;padding:5px 8px;border-radius:6px;width:100%"
+        oninput="filterSidebar(this.value)" autocomplete="off"/>
+    </div>
+    <div class="day-list" id="day-list"></div>
+  </aside>
+
+  <div class="pg on" id="pg-reg">
+    <div class="welcome" id="welcome">
+      <span class="ico">🚐</span>
+      <h2>Control de flota diaria</h2>
+      <p>Crea el primer registro del día. Las placas en taller se copian automáticamente.</p>
+      <button class="btn bp" onclick="showNDM()">＋ Crear primer día</button>
+    </div>
+    <div id="day-view" style="display:none"></div>
+  </div>
+
+  <div class="pg" id="pg-an"><div id="an-view"></div></div>
+  <div class="pg" id="pg-gest"><div id="gest-view"></div></div>
+  <div class="pg" id="pg-cal"><div id="cal-view"></div></div>
+</div>
+
+<nav class="mob-nav" id="mob-nav" hidden>
+  <button class="mob-nav-btn on" id="mn-reg" onclick="setPage('reg')"><span class="mn-icon">📋</span>Registro</button>
+  <button class="mob-nav-btn" id="mn-days" onclick="openDrawer()"><span class="mn-icon">📅</span>Días</button>
+  <button class="mob-nav-btn" id="mn-nd" onclick="showNDM()"><span class="mn-icon">＋</span>Nuevo</button>
+  <button class="mob-nav-btn" id="mn-an" onclick="setPage('an')"><span class="mn-icon">📊</span>Informe</button>
+  <button class="mob-nav-btn" id="mn-gest" onclick="setPage('gest')"><span class="mn-icon">🚨</span>Gestión</button>
+  <button class="mob-nav-btn" id="mn-cal" onclick="setPage('cal')"><span class="mn-icon">📅</span>Cal.</button>
+  <button class="mob-nav-btn" id="mn-more" onclick="openM('m-more')"><span class="mn-icon">⋯</span>Más</button>
+</nav>
+
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span class="drawer-lbl">Días registrados</span>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="day-list" id="drawer-list" style="padding:5px"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- MODAL NUEVO DÍA -->
+<div class="overlay" id="m-nd">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>📅 Nuevo día</h3>
+    <div class="fg g3" style="margin-bottom:10px">
+      <div><label>Fecha</label><input type="date" id="nd-f"/></div>
+      <div><label>Flota total</label><input type="number" id="nd-t" value="15" min="1" inputmode="numeric"/></div>
+      <div><label>OP – Tripulación</label><input type="number" id="nd-op" placeholder="12" min="0" inputmode="numeric"/></div>
+    </div>
+    <p style="font-size:11px;color:var(--slate)">Las placas activas del día anterior se copian automáticamente.</p>
+    <div class="modal-ft">
+      <button class="btn bo" onclick="closeM('m-nd')">Cancelar</button>
+      <button class="btn bp" onclick="crearDia()">Crear día</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR -->
+<div class="overlay" id="m-imp">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>📂 Restaurar respaldo</h3>
+    <p style="font-size:12px;color:var(--slate);margin-bottom:12px">Selecciona un archivo <strong>.json</strong> guardado previamente.</p>
+    <div style="border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;background:var(--bg)">
+      <div style="font-size:24px;margin-bottom:8px">📄</div>
+      <input type="file" id="imp-file" accept=".json" style="display:none" onchange="doImport(event)"/>
+      <button class="btn bo" onclick="document.getElementById('imp-file').click()">Seleccionar .json</button>
+    </div>
+    <div class="modal-ft"><button class="btn bo" onclick="closeM('m-imp')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL MÁS (mobile) -->
+<div class="overlay" id="m-more">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>⚙️ Opciones</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn bo" style="width:100%;justify-content:center;padding:13px" onclick="doBackup();closeM('m-more')">💾 Guardar respaldo (.json)</button>
+      <button class="btn bo" style="width:100%;justify-content:center;padding:13px" onclick="closeM('m-more');openM('m-imp')">📂 Restaurar desde archivo</button>
+      <button class="btn bo" style="width:100%;justify-content:center;padding:13px" onclick="doExcel();closeM('m-more')">⬇ Exportar Excel</button>
+      <div style="font-size:11px;color:var(--slate);text-align:center;padding:4px 0">Firebase: <span id="more-sync-lbl" style="font-weight:700">—</span></div>
+    </div>
+    <div class="modal-ft"><button class="btn bo" onclick="closeM('m-more')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL PLACA -->
+<div class="overlay" id="m-placa">
+  <div class="modal" style="max-width:760px;border-radius:16px 16px 0 0">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-family:'DM Mono',monospace;font-size:20px;font-weight:800;color:var(--navy);background:var(--blue-lt);padding:4px 12px;border-radius:7px" id="m-placa-title">—</span>
+          <span style="font-size:11px;font-weight:600;color:var(--slate)" id="m-placa-sub"></span>
+        </div>
+        <div style="font-size:11px;color:var(--slate);margin-top:4px">Historial completo de ingresos al taller</div>
+      </div>
+      <button class="btn bo btn-sm" onclick="closeM('m-placa')">✕ Cerrar</button>
+    </div>
+    <div class="twrap" style="max-height:60vh;overflow-y:auto">
+      <table>
+        <thead><tr><th>#</th><th>Ingreso</th><th>Novedad / Falla</th><th>Status</th><th>Taller</th><th>Días</th><th>Retorno</th></tr></thead>
+        <tbody id="m-placa-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-ft"><button class="btn bo" onclick="closeM('m-placa')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL PLAN DE ACCIÓN -->
+<div class="overlay" id="m-plan">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-handle"></div>
+    <h3>📋 Nuevo plan de acción</h3>
+    <div class="fg g2" style="margin-bottom:10px">
+      <div><label>Mes</label><select id="plan-mes-sel"></select></div>
+      <div><label>Estado</label>
+        <select id="plan-estado">
+          <option value="Completado">✅ Completado</option>
+          <option value="En proceso">⏳ En proceso</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:10px">
+      <div><label>Falla o problema identificado</label><input id="plan-falla" placeholder="Ej: Alta frecuencia de fallas en frenos…"/></div>
+    </div>
+    <div class="fg" style="margin-bottom:10px">
+      <div><label>Acción realizada o a realizar</label>
+        <textarea id="plan-accion" rows="3" placeholder="Ej: Se contactó al taller para revisión preventiva…"
+          style="width:100%;padding:8px 9px;border-radius:6px;border:1.5px solid var(--border);font-family:inherit;font-size:12px;resize:vertical;outline:none"></textarea>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:10px">
+      <div><label>Resultado obtenido (opcional)</label><input id="plan-resultado" placeholder="Ej: Se redujeron las fallas en un 70%…"/></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn bo" onclick="closeM('m-plan')">Cancelar</button>
+      <button class="btn bp" onclick="savePlan()">Guardar plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH PIN -->
+<div id="auth-overlay" class="read-overlay" style="display:none" onclick="if(event.target===this)hidePinModal()">
+  <div class="read-card">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3>Acceso de editor</h3>
+    <p>Ingresa el PIN para agregar, editar o eliminar registros.</p>
+    <div class="pin-row">
+      <input id="pin-input" type="password" inputmode="numeric" maxlength="10" placeholder="••••"
+        onkeydown="if(event.key==='Enter')submitPin()" style="font-size:24px;letter-spacing:8px"/>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn bo" onclick="hidePinModal()">Cancelar</button>
+      <button class="btn bp" onclick="submitPin()">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════
+//  FIREBASE CONFIG — Flota LIS Liviana
+// ═══════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCHkVyR4_7EndHMsZTp_rrOwHgwMOR8Vpo",
+  authDomain: "disponibilidad-camionetas.firebaseapp.com",
+  projectId: "disponibilidad-camionetas",
+  storageBucket: "disponibilidad-camionetas.firebasestorage.app",
+  messagingSenderId: "831434168754",
+  appId: "1:831434168754:web:9b2120fdbf8f279200acab"
+};
+const FIRESTORE_COLLECTION = "flota_lis_liviana";
+
+// ═══════════════════════════════════════════════
+//  CATÁLOGO DE PLACAS — 15 placas (cámbialas)
+// ═══════════════════════════════════════════════
+const PLACAS = [
+  'QIS217','QIZ218','QIZ219','QIZ220','QIZ221',
+  'QIZ222','QIZ223','QIZ224','QIZ225','QIZ226',
+  'QIZ227','QIZ228','JYK566','WCO071','FBY909','TGX038','TKL506','TKL507','TKL508','QIS376'
+];
+
+const META_TALLER = 2; // Meta: máx vehículos en taller para flota de 15
+
+// ═══════════════════════════════════════════════
+//  SISTEMAS
+// ═══════════════════════════════════════════════
+const SISTEMAS_LIST = [
+  'MOTOR','FRENOS','EMBRAGUE','TRANSMISIÓN','DIFERENCIAL',
+  'DIRECCIÓN','SUSPENSIÓN','ELÉCTRICO','CARROCERÍA','SAFETY/BLOQUEADO',
+  'AIRE/COMPRESOR','ACEITE/FUGAS','LLANTAS','VIDRIOS','OTRO'
+];
+const SISTEMAS_AUTO = [
+  {k:'MOTOR',          t:['MOTOR','POTENCIA','ENCENDIDO','ARRANQUE','INYECCION','TURBO','LLAVE']},
+  {k:'FRENOS',         t:['FRENO','CAMPANA','SECADORA','VALVULA','PARQUEO','BANDA','ABS']},
+  {k:'EMBRAGUE',       t:['EMBRAGUE','GUAYA','CLUTCH']},
+  {k:'TRANSMISIÓN',    t:['TRANSMISION','CAJA']},
+  {k:'DIFERENCIAL',    t:['DIFERENCIAL','RETENEDOR']},
+  {k:'DIRECCIÓN',      t:['DIRECCION','ALINEAC','TROQUE']},
+  {k:'SUSPENSIÓN',     t:['SUSPENSION','NEUMATICO','MANGUERA']},
+  {k:'ELÉCTRICO',      t:['ELECTRICO','SENSOR','ALERTA','ESCANER','CAMARA']},
+  {k:'CARROCERÍA',     t:['CARROCERIA','ARREGLO','ESTRUCTURA','FURGON']},
+  {k:'SAFETY/BLOQUEADO',t:['SAFETY','BLOQUEO','BLOQUEADO']},
+  {k:'AIRE/COMPRESOR', t:['COMPRESOR','AIRE']},
+  {k:'ACEITE/FUGAS',   t:['ACEITE','FUGA']},
+  {k:'LLANTAS',        t:['LLANTA']},
+  {k:'VIDRIOS',        t:['VIDRIO']},
+];
+function getSist(novedad, sistema){
+  if(sistema && sistema !== 'OTRO' && sistema.trim()) return sistema.trim();
+  if(!novedad) return 'OTRO';
+  const u = novedad.toUpperCase();
+  for(const s of SISTEMAS_AUTO) if(s.t.some(t=>u.includes(t))) return s.k;
+  return 'OTRO';
+}
+
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+const EDITOR_PIN  = '1234'; // ← CAMBIA ESTE PIN
+const AUTH_KEY    = 'flota_lis_auth_v1';
+const SESSION_MS  = 5 * 60 * 1000;
+let isEditor = false;
+let _actTimer = null;
+
+function checkAuth(){
+  try{
+    const raw=localStorage.getItem(AUTH_KEY);
+    if(!raw)return false;
+    const {pin,lastActivity}=JSON.parse(raw);
+    if((Date.now()-lastActivity)>SESSION_MS){localStorage.removeItem(AUTH_KEY);return false;}
+    return pin===EDITOR_PIN;
+  }catch(e){return false;}
+}
+function touchActivity(){
+  if(!isEditor)return;
+  try{const raw=localStorage.getItem(AUTH_KEY);if(raw){const d=JSON.parse(raw);d.lastActivity=Date.now();localStorage.setItem(AUTH_KEY,JSON.stringify(d));}}catch(e){}
+  clearTimeout(_actTimer);
+  _actTimer=setTimeout(()=>{if(isEditor){isEditor=false;setEditorMode(false);showPinModal('Sesión expirada. Ingresa el PIN para continuar.');}},SESSION_MS);
+}
+function setEditorMode(on){
+  isEditor=on;
+  const badge=document.getElementById('role-badge');
+  if(badge){badge.className='role-badge '+(on?'rb-editor':'rb-viewer');badge.innerHTML=on?'✏️ Editor &nbsp;·&nbsp; Salir':'👁 Solo lectura &nbsp;·&nbsp; Ingresar';}
+  renderSidebar();if(curIdx!==null)renderDay();
+}
+function toggleAuth(){
+  if(isEditor){if(confirm('¿Cerrar sesión de editor?')){localStorage.removeItem(AUTH_KEY);isEditor=false;setEditorMode(false);toast('Sesión cerrada','👁');}}
+  else showPinModal();
+}
+function showPinModal(msg=''){
+  const ov=document.getElementById('auth-overlay');
+  if(ov){ov.style.display='flex';document.getElementById('pin-input').value='';
+    const errEl=document.getElementById('pin-err');errEl.textContent=msg;errEl.style.color=msg?'var(--amber)':'var(--red)';
+    setTimeout(()=>document.getElementById('pin-input').focus(),100);}
+}
+function hidePinModal(){const ov=document.getElementById('auth-overlay');if(ov)ov.style.display='none';}
+function submitPin(){
+  const pin=document.getElementById('pin-input').value.trim();
+  if(pin===EDITOR_PIN){
+    localStorage.setItem(AUTH_KEY,JSON.stringify({pin,lastActivity:Date.now()}));
+    hidePinModal();isEditor=true;setEditorMode(true);touchActivity();
+    toast('Sesión activa','✏️');
+  }else{document.getElementById('pin-err').textContent='PIN incorrecto.';document.getElementById('pin-input').value='';document.getElementById('pin-input').focus();}
+}
+function requireEditor(fn){if(!isEditor){showPinModal();return false;}return fn();}
+
+// ═══════════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════════
+let db=null,fbOnline=false,unsubscribe=null;
+
+function initFirebase(){
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.firestore();
+    setSyncStatus('syncing','Conectando…');
+    unsubscribe=db.collection(FIRESTORE_COLLECTION).orderBy('fecha').onSnapshot(snap=>{
+      const days=snap.docs.map(d=>d.data());
+      if(days.length>0){
+        days.forEach(d=>{
+          if(!d.snapshot)d.snapshot=calcSnap(d);
+          if(!Array.isArray(d.retornados))d.retornados=[];
+          if(!Array.isArray(d.pendientes))d.pendientes=[];
+          if(!Array.isArray(d.novedadesConductores))d.novedadesConductores=[];
+        });
+        state.days=days;saveLocal();renderSidebar();
+        if(curIdx!==null)renderDay();if(curPage==='an')renderAn();
+      }
+      fbOnline=true;setSyncStatus('ok',`Firebase · ${days.length} días`);
+    },err=>{console.error(err);setSyncStatus('offline','Sin conexión — datos locales');fbOnline=false;});
+  }catch(e){console.error(e);setSyncStatus('offline','Error Firebase — modo local');}
+}
+function setSyncStatus(type,msg){
+  const dot=document.getElementById('sync-dot');const lbl=document.getElementById('sync-lbl');const ml=document.getElementById('more-sync-lbl');
+  if(dot)dot.className='sync-dot'+(type==='ok'?' ok':type==='syncing'?' syncing':' offline');
+  if(lbl)lbl.textContent=msg;if(ml){ml.textContent=msg;ml.style.color=type==='ok'?'var(--green)':type==='syncing'?'var(--amber)':'var(--red)';}
+}
+async function saveToFirebase(day){
+  if(!db||!fbOnline)return;
+  try{setSyncStatus('syncing','Guardando…');await db.collection(FIRESTORE_COLLECTION).doc(day.fecha).set(day);setSyncStatus('ok',`Firebase · ${state.days.length} días`);}
+  catch(e){console.error(e);setSyncStatus('offline','Error al guardar');}
+}
+async function deleteFromFirebase(fecha){if(!db||!fbOnline)return;try{await db.collection(FIRESTORE_COLLECTION).doc(fecha).delete();}catch(e){console.error(e);}}
+async function pushAllToFirebase(){
+  if(!db||!fbOnline)return;setSyncStatus('syncing','Sincronizando…');
+  try{const batch=db.batch();state.days.forEach(d=>{batch.set(db.collection(FIRESTORE_COLLECTION).doc(d.fecha),d);});await batch.commit();setSyncStatus('ok',`Firebase · ${state.days.length} días`);toast('Datos sincronizados','☁️');}
+  catch(e){setSyncStatus('offline','Error al sincronizar');toast('Error: '+e.message,'❌');}
+}
+
+// ═══════════════════════════════════════════════
+//  ESTADO LOCAL
+// ═══════════════════════════════════════════════
+const SK='flota_lis_v1';
+function loadLocal(){try{const raw=localStorage.getItem(SK);if(raw){const p=JSON.parse(raw);if(p.days&&p.days.length>0)return p;}}catch(e){}return{days:[]};}
+function saveLocal(){localStorage.setItem(SK,JSON.stringify(state));}
+let state=loadLocal();let curIdx=null;let curPage='reg';
+
+function calcSnap(d){
+  const enTaller=d.placasEnTaller.filter(p=>!p.retornado&&!isRestriccion(p.status)).length;
+  const disp=d.total-enTaller;
+  return{disp,enTaller,restriccion:d.placasEnTaller.filter(p=>!p.retornado&&isRestriccion(p.status)).length,pct:Math.round(disp/d.total*100)};
+}
+function isRestriccion(s){return s&&s.toUpperCase().includes('RESTRICCI');}
+function esDomingo(fecha){if(!fecha)return false;return new Date(fecha+'T12:00:00').getDay()===0;}
+function save(modIdx){
+  touchActivity();const i=modIdx!==undefined?modIdx:curIdx;
+  if(i!==null&&i!==undefined&&state.days[i]){state.days[i].snapshot=calcSnap(state.days[i]);saveToFirebase(state.days[i]);}
+  saveLocal();
+}
+function getDispInfo(d){return d.snapshot||calcSnap(d);}
+
+// Migración inicial
+let _ns=false;
+state.days.forEach(d=>{
+  if(!d.snapshot){d.snapshot=calcSnap(d);_ns=true;}
+  if(!Array.isArray(d.retornados)){d.retornados=[];_ns=true;}
+  if(!Array.isArray(d.pendientes)){d.pendientes=[];_ns=true;}
+  if(!Array.isArray(d.novedadesConductores)){d.novedadesConductores=[];_ns=true;}
+  if(d.op===undefined){d.op=null;_ns=true;}
+});
+if(_ns)saveLocal();
+
+// ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+function today(){return new Date().toISOString().slice(0,10);}
+function fmtF(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
+function dias(a,b){return(!a||!b)?0:Math.max(0,Math.round((new Date(b)-new Date(a))/864e5));}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function pc(p){return p>=90?'var(--green)':p>=85?'var(--amber)':'var(--red)';}
+function pcCls(p){return p>=90?'p-ok':p>=85?'p-warn':'p-bad';}
+function bdg(s){
+  if(!s)return'';const u=s.toUpperCase();
+  if(u.includes('INOPERATIVO'))return`<span class="badge b-in">🔴 ${s}</span>`;
+  if(u.includes('BLOQUEADO'))return`<span class="badge b-bl">⛔ ${s}</span>`;
+  if(u.includes('OPERATIVO'))return`<span class="badge b-op">✅ ${s}</span>`;
+  if(u.includes('RESTRICCI'))return`<span class="badge b-re">🟣 ${s}</span>`;
+  return`<span class="badge b-in">${s}</span>`;
+}
+function dPill(n){return`<span class="dp ${n>=10?'hi':''}">${n}d</span>`;}
+function metaBadge(n){
+  if(n<=META_TALLER)return`<span class="meta-badge mb-ok">✅ En meta (≤${META_TALLER})</span>`;
+  if(n<=META_TALLER+1)return`<span class="meta-badge mb-warn">⚠️ ${n-META_TALLER} sobre meta</span>`;
+  return`<span class="meta-badge mb-bad">🚨 ${n-META_TALLER} sobre meta</span>`;
+}
+function toast(msg,e='✅'){const el=document.getElementById('toast');el.innerHTML=`<span>${e}</span> ${msg}`;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ═══════════════════════════════════════════════
+//  PAGE ROUTING
+// ═══════════════════════════════════════════════
+function setPage(p){
+  curPage=p;
+  ['reg','an','gest','cal'].forEach(x=>document.getElementById('pg-'+x)?.classList.toggle('on',p===x));
+  ['nav-r','nav-a','nav-g','nav-cal'].forEach((id,i)=>document.getElementById(id)?.classList.toggle('on',p===['reg','an','gest','cal'][i]));
+  ['mn-reg','mn-an','mn-gest','mn-cal'].forEach((id,i)=>document.getElementById(id)?.classList.toggle('on',p===['reg','an','gest','cal'][i]));
+  document.body.classList.toggle('pg-gest-active',p==='gest'||p==='cal');
+  if(p==='an')renderAn();
+  if(p==='gest'){window._gestFiltroMes=null;window._gestFiltroAnio=null;renderGest(null,null);}
+  if(p==='cal')renderCal();
+}
+
+// ═══════════════════════════════════════════════
+//  DRAWER
+// ═══════════════════════════════════════════════
+function openDrawer(){renderDrawer();document.getElementById('drawer').classList.add('open');document.getElementById('drawer-overlay').style.display='block';setTimeout(()=>document.getElementById('drawer-overlay').classList.add('open'),10);}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('drawer-overlay').classList.remove('open');setTimeout(()=>document.getElementById('drawer-overlay').style.display='none',280);}
+function renderDrawer(){
+  const el=document.getElementById('drawer-list');
+  if(!state.days.length){el.innerHTML=`<div class="sb-empty"><div style="font-size:24px">📭</div><p>Sin registros</p></div>`;return;}
+  const reversed=[...state.days].reverse();
+  el.innerHTML=reversed.map(d=>{
+    const i=state.days.indexOf(d);const info=getDispInfo(d);const meta=info.enTaller<=META_TALLER;
+    return`<div class="di ${i===curIdx?'on':''}" onclick="selectDay(${i});closeDrawer()">
+      <div><div class="di-lbl">${fmtF(d.fecha)}</div><div class="di-meta">${info.disp}/${d.total} · ${info.enTaller} taller</div></div>
+      <div class="di-right"><span class="pct-pill ${pcCls(info.pct)}">${info.pct}%</span><div class="meta-dot ${meta?'dot-ok':'dot-bad'}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════
+function openM(id){document.getElementById(id)?.classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+['m-nd','m-imp','m-more','m-placa','m-plan'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target.id===id)closeM(id);});});
+function showNDM(){if(!isEditor){showPinModal();return;}document.getElementById('nd-f').value=today();openM('m-nd');}
+
+// ═══════════════════════════════════════════════
+//  CREAR DÍA
+// ═══════════════════════════════════════════════
+function crearDia(){
+  if(!isEditor){showPinModal();return;}
+  const fecha=document.getElementById('nd-f').value;
+  const total=parseInt(document.getElementById('nd-t').value)||15;
+  const op=parseInt(document.getElementById('nd-op').value)||null;
+  if(!fecha){alert('Selecciona una fecha');return;}
+  if(state.days.find(d=>d.fecha===fecha)){alert('Ya existe un registro para esa fecha');return;}
+  let placasEnTaller=[];
+  if(state.days.length>0){
+    const last=state.days[state.days.length-1];
+    placasEnTaller=last.placasEnTaller.filter(p=>!p.retornado).map(p=>({...p,diasEnTaller:dias(p.fechaIngreso,fecha),retornado:false}));
+  }
+  const newDay={fecha,total,op,placasEnTaller,retornados:[],pendientes:[],novedadesConductores:[]};
+  newDay.snapshot=calcSnap(newDay);
+  state.days.push(newDay);state.days.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  saveLocal();saveToFirebase(newDay);closeM('m-nd');renderSidebar();
+  selectDay(state.days.findIndex(d=>d.fecha===fecha));
+  toast(`Día ${fmtF(fecha)} creado`,'📅');
+}
+
+// ═══════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════
+function renderSidebar(filter=''){
+  const el=document.getElementById('day-list');
+  document.getElementById('sb-cnt').textContent=state.days.length+'d';
+  if(!state.days.length){el.innerHTML=`<div class="sb-empty"><div style="font-size:24px">📭</div><p>Sin registros</p></div>`;return;}
+  const reversed=[...state.days].reverse();const flt=filter.trim().toLowerCase();
+  const filtered=flt?reversed.filter(d=>fmtF(d.fecha).includes(flt)||d.fecha.includes(flt)):reversed;
+  if(!filtered.length){el.innerHTML=`<div class="sb-empty"><div style="font-size:20px">🔍</div><p>Sin resultados</p></div>`;return;}
+  el.innerHTML=filtered.map(d=>{
+    const i=state.days.indexOf(d);const info=getDispInfo(d);const meta=info.enTaller<=META_TALLER;
+    return`<div class="di ${i===curIdx?'on':''}" onclick="selectDay(${i})">
+      <div style="min-width:0;flex:1">
+        <div class="di-lbl">${fmtF(d.fecha)}</div>
+        <div class="di-meta">${esDomingo(d.fecha)?'🔵 Dom · ':''} ${info.disp}/${d.total} disp · ${info.enTaller} taller${d.op!=null?' · OP '+d.op:''}</div>
+      </div>
+      <div class="di-right">
+        <span class="pct-pill ${pcCls(info.pct)}">${info.pct}%</span>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+          <div class="meta-dot ${meta?'dot-ok':'dot-bad'}"></div>
+          <span onclick="event.stopPropagation();selectDay(${i},true)" style="font-size:9px;color:var(--blue);cursor:pointer;font-weight:700;opacity:.7;line-height:1">📊</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function filterSidebar(v){renderSidebar(v);}
+
+// ═══════════════════════════════════════════════
+//  SELECT DAY
+// ═══════════════════════════════════════════════
+function selectDay(idx,goToReport=false){
+  curIdx=idx;renderSidebar();
+  if(goToReport||curPage==='an'){
+    setPage('an');
+    setTimeout(()=>{const sel=document.getElementById('an-t');if(sel){sel.value='dia';updateFUI();const vSel=document.getElementById('an-v');if(vSel)vSel.value=state.days[idx].fecha;runAn();}},50);
+  }else if(curPage==='gest'){
+    setPage('reg');document.getElementById('welcome').style.display='none';document.getElementById('day-view').style.display='block';renderDay();
+  }else{
+    document.getElementById('welcome').style.display='none';document.getElementById('day-view').style.display='block';renderDay();document.getElementById('pg-reg').scrollTop=0;
+  }
+}
+function D(){return state.days[curIdx];}
+
+// ═══════════════════════════════════════════════
+//  RENDER DAY
+// ═══════════════════════════════════════════════
+function renderDay(){
+  const d=D();if(!d)return;
+  const isLast=curIdx===state.days.length-1;
+  const activos=d.placasEnTaller.filter(p=>!p.retornado);
+  const enTallerReal=activos.filter(p=>!isRestriccion(p.status)).length;
+  const restriccionCount=activos.filter(p=>isRestriccion(p.status)).length;
+  const disp=d.total-enTallerReal;const pct=(disp/d.total*100).toFixed(1);
+  const op=d.op;
+  const opTxt=op!=null?(op>disp?`<span style="color:var(--red);font-size:10px;font-weight:700">▲ ${op-disp} sin vehículo</span>`:op<disp?`<span style="color:var(--green);font-size:10px;font-weight:700">✅ ${disp-op} libres</span>`:`<span style="color:var(--slate);font-size:10px;font-weight:700">= Exacto</span>`):`<span style="color:var(--slate);font-size:10px">Sin registro</span>`;
+  const metaC=enTallerReal<=META_TALLER?'var(--green)':enTallerReal<=META_TALLER+1?'var(--amber)':'var(--red)';
+  const isDom=esDomingo(d.fecha);
+  const domBanner=isDom?`<div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px"><span style="font-size:20px">🔵</span><div><div style="font-size:12px;font-weight:800;color:#fff">Rutina Dominical</div><div style="font-size:10px;color:rgba(255,255,255,.75)">Mantenimiento preventivo — disponibles en pocas horas.</div></div></div>`:'';
+  const histBanner=!isLast?`<div style="background:var(--amber-lt);border:1.5px solid var(--amber);border-radius:8px;padding:9px 12px;margin-bottom:12px;display:flex;align-items:center;gap:9px"><span style="font-size:16px">🔒</span><div><div style="font-size:11px;font-weight:700;color:var(--amber)">Día histórico — solo lectura</div><div style="font-size:10px;color:var(--text2)">Los números de este día ya están cerrados.</div></div></div>`:'';
+
+  document.getElementById('day-view').innerHTML=`
+    ${domBanner}${histBanner}
+    <div class="kgrid k5">
+      <div class="kpi k-bl"><div class="kpi-lbl">Total</div><div class="kpi-val">${d.total}</div><div class="kpi-sub">asignados</div></div>
+      <div class="kpi k-gr"><div class="kpi-lbl">Disponibles</div><div class="kpi-val">${disp}</div><div class="kpi-sub">${pct}%</div><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${pc(+pct)}"></div></div></div>
+      <div class="kpi k-or"><div class="kpi-lbl">En taller</div><div class="kpi-val">${enTallerReal}</div><div class="kpi-sub">${metaBadge(enTallerReal)}</div></div>
+      <div class="kpi k-am"><div class="kpi-lbl">Retornados</div><div class="kpi-val">${d.retornados.length}</div><div class="kpi-sub">hoy</div></div>
+      <div class="kpi k-pu" style="position:relative"><div class="kpi-lbl">OP</div><div class="kpi-val">${op!=null?op:'—'}</div><div class="kpi-sub">${opTxt}</div>${isLast&&isEditor?`<button onclick="editOP()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:12px;color:var(--slate)">✏️</button>`:''}</div>
+    </div>
+
+    <div class="meta-bar-wrap">
+      <div class="meta-bar-card">
+        <div class="meta-icon">🎯</div>
+        <div class="meta-info">
+          <div class="meta-title">Meta: máx ${META_TALLER} en taller</div>
+          <div class="meta-track"><div class="meta-fill" style="width:${Math.min(100,Math.round(enTallerReal/(META_TALLER*2)*100))}%;background:${metaC}"></div></div>
+        </div>
+        <div class="meta-right">${metaBadge(enTallerReal)}<div style="font-size:10px;color:var(--slate);margin-top:3px">${enTallerReal}/${META_TALLER}</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;gap:8px;flex-wrap:wrap">
+      <div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800">${fmtF(d.fecha)}</h2>
+        <p style="font-size:10px;color:${isDom?'#7c3aed':'var(--slate)'}">${isDom?'🔵 Rutina dominical':isLast?'Día activo — en edición':'Registro histórico'}</p>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+        <button class="btn bo btn-sm" onclick="selectDay(${curIdx},true)">📊 Informe</button>
+        <button class="btn bo btn-sm" onclick="exportImagen()">📸 Imagen</button>
+        ${isLast&&isEditor?`<button class="btn btn-sm" style="color:var(--red);border:1.5px solid var(--red);background:white;font-size:10px" onclick="eliminarDia()">🗑 Eliminar</button>`:''}
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" id="tab-t" onclick="switchTab('t')">🔧 Taller (${enTallerReal})${restriccionCount>0?` · 🟣 Restricción (${restriccionCount})`:''}</button>
+      <button class="tab" id="tab-r" onclick="switchTab('r')">✅ Retornados (${d.retornados.length})</button>
+      <button class="tab" id="tab-n" onclick="switchTab('n')">🗣 Conductores (${(d.novedadesConductores||[]).length})</button>
+      <button class="tab" id="tab-p" onclick="switchTab('p')">📌 Pendientes (${d.pendientes.length})</button>
+    </div>
+    <div id="tc"></div>`;
+  switchTab('t');
+}
+
+let aTab='t';
+function switchTab(t){
+  aTab=t;['t','r','n','p'].forEach(x=>document.getElementById('tab-'+x)?.classList.toggle('on',x===t));
+  const tc=document.getElementById('tc');
+  if(t==='t')tc.innerHTML=bldTaller();if(t==='r')tc.innerHTML=bldRet();if(t==='n')tc.innerHTML=bldConductores();if(t==='p')tc.innerHTML=bldPend();
+  setupAC();
+}
+
+// ═══════════════════════════════════════════════
+//  AUTOCOMPLETE
+// ═══════════════════════════════════════════════
+let acSel=-1;
+function setupAC(){
+  document.querySelectorAll('.aci-inp').forEach(inp=>{
+    inp.addEventListener('input',()=>doAC(inp));inp.addEventListener('keydown',e=>navAC(e,inp));
+    inp.addEventListener('blur',()=>setTimeout(()=>closeAC(inp.dataset.al),200));
+  });
+}
+function doAC(inp){
+  const v=inp.value.toUpperCase().trim();inp.value=v;const lid=inp.dataset.al;const list=document.getElementById(lid);
+  if(!list||v.length<2){list?.classList.remove('open');return;}
+  const m=PLACAS.filter(p=>p.includes(v)).slice(0,8);
+  if(!m.length){list.classList.remove('open');return;}
+  list.innerHTML=m.map(p=>`<div class="aci" data-v="${p}" onmousedown="pickAC('${p}','${inp.id}','${lid}')"><div class="acdot"></div>${p.replace(v,`<span class="ac-hi">${v}</span>`)}</div>`).join('');
+  list.classList.add('open');acSel=-1;
+}
+function navAC(e,inp){
+  const lid=inp.dataset.al;const list=document.getElementById(lid);const its=list?.querySelectorAll('.aci');if(!its?.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();acSel=Math.min(acSel+1,its.length-1);its.forEach((it,i)=>it.classList.toggle('sel',i===acSel));if(acSel>=0)its[acSel].scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();acSel=Math.max(acSel-1,0);its.forEach((it,i)=>it.classList.toggle('sel',i===acSel));}
+  else if((e.key==='Enter'||e.key==='Tab')&&acSel>=0){e.preventDefault();pickAC(its[acSel].dataset.v,inp.id,lid);}
+  else if(e.key==='Escape')closeAC(lid);
+}
+function pickAC(v,iid,lid){document.getElementById(iid).value=v;closeAC(lid);document.getElementById(iid)?.focus();}
+function closeAC(lid){const l=document.getElementById(lid);if(l){l.classList.remove('open');l.innerHTML='';}acSel=-1;}
+
+// ═══════════════════════════════════════════════
+//  TAB TALLER
+// ═══════════════════════════════════════════════
+function bldTaller(){
+  const d=D();const isLast=curIdx===state.days.length-1;
+  const act=d.placasEnTaller.filter(p=>!p.retornado);
+  const rows=act.length===0?`<tr><td colspan="7"><div class="nodata"><div style="font-size:26px">✅</div><p>Sin vehículos en taller</p></div></td></tr>`
+    :act.map(p=>{const ri=d.placasEnTaller.indexOf(p);return`<tr>
+      <td><span class="placa">${p.placa}</span></td>
+      <td class="hide-mob" style="color:var(--slate)">${fmtF(p.fechaIngreso)}</td>
+      <td style="max-width:160px">${esc(p.novedad)||'—'}<br><span style="font-size:9px;color:var(--blue);font-weight:600">${getSist(p.novedad,p.sistema)}</span></td>
+      <td class="hide-mob">${bdg(p.status)}</td>
+      <td class="hide-mob">${esc(p.taller)||'—'}</td>
+      <td>${dPill(p.diasEnTaller)}</td>
+      <td style="white-space:nowrap">${isLast&&isEditor
+        ?`<button class="btn bs btn-xs" onclick="retornar(${ri})">↩ <span class="btn-lbl">Retornar</span></button>
+           <button class="ibtn" onclick="editVeh(${ri})">✏️</button>
+           <button class="ibtn" onclick="delVeh(${ri})">🗑</button>`
+        :`<span style="font-size:10px;color:var(--slate)">🔒</span>`}
+      </td></tr>`;}).join('');
+  return`<div class="panel">
+    <div class="panel-hd"><div class="ptitle">🔧 En taller — ${fmtF(d.fecha)}</div>${isLast&&isEditor?`<button class="btn bp btn-sm" onclick="showAddVeh()">＋ Agregar</button>`:''}</div>
+    <div id="av-c"></div>
+    <div class="twrap"><table><thead><tr><th>Placa</th><th class="hide-mob">Ingreso</th><th>Novedad</th><th class="hide-mob">Status</th><th class="hide-mob">Taller</th><th>Días</th><th>Acc.</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+
+function vehForm(pre={}){
+  const d=D();
+  return`<div class="iform on">
+    <div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:7px">${pre.idx!==undefined?'✏️ EDITANDO':'➕ NUEVA PLACA EN TALLER'}</div>
+    <div class="fg g2" style="margin-bottom:8px">
+      <div><label>Placa *</label><div class="acw"><input id="vf-p" class="aci-inp" data-al="vf-ac" placeholder="Buscar placa…" value="${esc(pre.placa||'')}" autocomplete="off" oninput="this.value=this.value.toUpperCase()"/><div class="acl" id="vf-ac"></div></div></div>
+      <div><label>Fecha ingreso *</label><input type="date" id="vf-fi" value="${pre.fechaIngreso||d.fecha}"/></div>
+    </div>
+    <div class="fg g2" style="margin-bottom:8px">
+      <div><label>Status *</label><select id="vf-st"><option ${(pre.status||'INOPERATIVO')==='INOPERATIVO'?'selected':''}>INOPERATIVO</option><option ${pre.status==='BLOQUEADO'?'selected':''}>BLOQUEADO</option><option ${pre.status==='RESTRICCIÓN'?'selected':''}>RESTRICCIÓN</option></select></div>
+      <div><label>Taller</label><input id="vf-tl" placeholder="Nombre del taller…" value="${esc(pre.taller||'')}"/></div>
+    </div>
+    <div class="fg g2" style="margin-bottom:8px">
+      <div><label>Novedad / Falla</label><input id="vf-nv" placeholder="Descripción de la falla…" value="${esc(pre.novedad||'')}"/></div>
+      <div><label>Sistema afectado</label><input id="vf-si" placeholder="Ej: Motor, Frenos…" value="${esc(pre.sistema||'')}" oninput="this.value=this.value.toUpperCase()"/></div>
+    </div>
+    <div class="frow">
+      <button class="btn bo btn-sm" onclick="document.getElementById('av-c').innerHTML=''">Cancelar</button>
+      <button class="btn bp btn-sm" onclick="${pre.idx!==undefined?`updVeh(${pre.idx})`:'saveVeh()'}">
+        ${pre.idx!==undefined?'Actualizar':'Guardar'}
+      </button>
+    </div>
+  </div>`;
+}
+function showAddVeh(){if(!isEditor){showPinModal();return;}document.getElementById('av-c').innerHTML=vehForm();setupAC();document.getElementById('vf-p').focus();}
+function editVeh(i){if(!isEditor){showPinModal();return;}document.getElementById('av-c').innerHTML=vehForm({...D().placasEnTaller[i],idx:i});setupAC();}
+function saveVeh(){
+  if(!isEditor){showPinModal();return;}
+  const d=D();const placa=document.getElementById('vf-p').value.trim().toUpperCase();const fi=document.getElementById('vf-fi').value;
+  if(!placa||placa.length<3){alert('Placa inválida');return;}
+  if(!PLACAS.includes(placa)&&!confirm(`"${placa}" no está en el catálogo. ¿Agregar igual?`))return;
+  if(!fi){alert('Selecciona la fecha de ingreso');return;}
+  d.placasEnTaller.push({placa,fechaIngreso:fi,novedad:document.getElementById('vf-nv').value.trim(),sistema:document.getElementById('vf-si').value.trim(),status:document.getElementById('vf-st').value,taller:document.getElementById('vf-tl').value.trim(),diasEnTaller:dias(fi,d.fecha),retornado:false});
+  save(curIdx);renderDay();switchTab('t');toast(`${placa} agregada al taller`,'🔧');
+}
+function updVeh(idx){
+  if(!isEditor){showPinModal();return;}
+  const d=D();const p=d.placasEnTaller[idx];
+  p.placa=document.getElementById('vf-p').value.trim().toUpperCase();p.fechaIngreso=document.getElementById('vf-fi').value;
+  p.status=document.getElementById('vf-st').value;p.taller=document.getElementById('vf-tl').value.trim();
+  p.novedad=document.getElementById('vf-nv').value.trim();p.sistema=document.getElementById('vf-si').value.trim();
+  p.diasEnTaller=dias(p.fechaIngreso,d.fecha);
+  save(curIdx);renderDay();switchTab('t');toast(`${p.placa} actualizada`,'✏️');
+}
+function delVeh(idx){if(!isEditor){showPinModal();return;}if(!confirm('¿Eliminar?'))return;D().placasEnTaller.splice(idx,1);save(curIdx);renderDay();switchTab('t');}
+function retornar(idx){
+  if(!isEditor){showPinModal();return;}
+  const d=D();const p=d.placasEnTaller[idx];
+  const rep=prompt('✅ Retorno de '+p.placa+'\nReparación realizada:',p.novedad||'');
+  if(rep===null)return;
+  p.retornado=true;
+  d.retornados.push({placa:p.placa,fechaIngreso:p.fechaIngreso,reparacion:rep,taller:p.taller,fechaEntrega:d.fecha});
+  save(curIdx);renderDay();switchTab('r');
+  toast(p.placa+' retornado','✅');
+}
+
+// ═══════════════════════════════════════════════
+//  TAB RETORNADOS
+// ═══════════════════════════════════════════════
+function bldRet(){
+  const d=D();const isLast=curIdx===state.days.length-1;
+  const rows=d.retornados.length===0?`<tr><td colspan="5"><div class="nodata"><div style="font-size:26px">📭</div><p>Ninguno retornó</p></div></td></tr>`
+    :d.retornados.map((r,i)=>`<tr><td><span class="placa">${r.placa}</span></td><td class="hide-mob" style="color:var(--slate)">${fmtF(r.fechaIngreso)}</td><td>${esc(r.reparacion)||'—'}</td><td class="hide-mob">${esc(r.taller)||'—'}</td><td><span class="badge b-op">✅</span>${isLast&&isEditor?`<button class="ibtn" onclick="delRet(${i})">🗑</button>`:''}</td></tr>`).join('');
+  return`<div class="panel">
+    <div class="panel-hd"><div class="ptitle">✅ Retornados — ${fmtF(d.fecha)}</div>${isLast&&isEditor?`<button class="btn bs btn-sm" onclick="showAddRet()">＋ Agregar</button>`:''}</div>
+    <div id="ar-c"></div>
+    <div class="twrap"><table><thead><tr><th>Placa</th><th class="hide-mob">Ingreso</th><th>Reparación</th><th class="hide-mob">Taller</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function showAddRet(){if(!isEditor){showPinModal();return;}const d=D();
+  document.getElementById('ar-c').innerHTML=`<div class="iform on"><div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:7px">➕ RETORNO MANUAL</div>
+    <div class="fg g2" style="margin-bottom:8px"><div><label>Placa *</label><div class="acw"><input id="ar-p" class="aci-inp" data-al="ar-ac" placeholder="Buscar…" autocomplete="off" oninput="this.value=this.value.toUpperCase()"/><div class="acl" id="ar-ac"></div></div></div>
+    <div><label>Fecha ingreso</label><input type="date" id="ar-fi" value="${d.fecha}"/></div></div>
+    <div class="fg g2" style="margin-bottom:8px"><div><label>Taller</label><input id="ar-tl" placeholder="…"/></div><div><label>Reparación</label><input id="ar-rp" placeholder="Trabajo realizado…"/></div></div>
+    <div class="frow"><button class="btn bo btn-sm" onclick="document.getElementById('ar-c').innerHTML=''">Cancelar</button><button class="btn bs btn-sm" onclick="saveRet()">Guardar</button></div>
+  </div>`;setupAC();
+}
+function saveRet(){
+  if(!isEditor){showPinModal();return;}const d=D();const placa=document.getElementById('ar-p').value.trim().toUpperCase();
+  if(!placa){alert('Ingresa la placa');return;}
+  d.retornados.push({placa,fechaIngreso:document.getElementById('ar-fi').value,reparacion:document.getElementById('ar-rp').value.trim(),taller:document.getElementById('ar-tl').value.trim(),fechaEntrega:d.fecha});
+  save(curIdx);renderDay();switchTab('r');toast(`Retorno de ${placa} registrado`,'✅');
+}
+function delRet(i){if(!isEditor){showPinModal();return;}D().retornados.splice(i,1);save(curIdx);renderDay();switchTab('r');}
+
+// ═══════════════════════════════════════════════
+//  TAB CONDUCTORES
+// ═══════════════════════════════════════════════
+function bldConductores(){
+  const d=D();if(!d.novedadesConductores)d.novedadesConductores=[];const isLast=curIdx===state.days.length-1;
+  const rows=d.novedadesConductores.length===0?`<tr><td colspan="4"><div class="nodata"><div style="font-size:28px">🗣</div><p>Sin novedades de conductores</p></div></td></tr>`
+    :d.novedadesConductores.map((n,i)=>`<tr><td><span class="placa">${n.placa||'—'}</span></td><td style="color:var(--slate);font-size:11px;white-space:nowrap">${fmtF(n.fecha)||fmtF(d.fecha)}</td><td style="max-width:320px">${esc(n.novedad)||'—'}</td><td>${isLast&&isEditor?`<button class="ibtn" onclick="delConductorNov(${i})">🗑</button>`:''}</td></tr>`).join('');
+  return`<div class="panel">
+    <div class="panel-hd"><div class="ptitle">🗣 Novedades de conductores — ${fmtF(d.fecha)}</div>${isLast&&isEditor?`<button class="btn bp btn-sm" onclick="showAddConductorNov()">＋ Agregar</button>`:''}</div>
+    <div id="cn-c"></div>
+    <div style="padding:10px 14px 6px;background:var(--blue-lt);border-bottom:1px solid var(--border)"><p style="font-size:11px;color:var(--text2)">📋 Registro de novedades reportadas por los conductores.</p></div>
+    <div class="twrap"><table><thead><tr><th>Placa</th><th>Fecha</th><th>Novedad reportada</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function showAddConductorNov(){if(!isEditor){showPinModal();return;}const d=D();
+  document.getElementById('cn-c').innerHTML=`<div class="iform on"><div style="font-size:10px;font-weight:700;color:var(--blue);margin-bottom:8px">➕ NUEVA NOVEDAD DE CONDUCTOR</div>
+    <div class="fg g2" style="margin-bottom:9px"><div><label>Placa del vehículo</label><div class="acw"><input id="cn-p" class="aci-inp" data-al="cn-ac" placeholder="Buscar placa…" autocomplete="off" oninput="this.value=this.value.toUpperCase()"/><div class="acl" id="cn-ac"></div></div></div>
+    <div><label>Fecha</label><input type="date" id="cn-f" value="${d.fecha}"/></div></div>
+    <div class="fg" style="margin-bottom:9px"><div><label>Novedad reportada</label><input id="cn-n" placeholder="Describe la novedad…"/></div></div>
+    <div class="frow"><button class="btn bo btn-sm" onclick="document.getElementById('cn-c').innerHTML=''">Cancelar</button><button class="btn bp btn-sm" onclick="saveConductorNov()">Guardar</button></div>
+  </div>`;setupAC();
+}
+function saveConductorNov(){
+  if(!isEditor){showPinModal();return;}const d=D();if(!d.novedadesConductores)d.novedadesConductores=[];
+  const novedad=document.getElementById('cn-n').value.trim();if(!novedad){alert('Ingresa la novedad');return;}
+  d.novedadesConductores.push({placa:document.getElementById('cn-p').value.trim().toUpperCase(),fecha:document.getElementById('cn-f').value,novedad});
+  save(curIdx);renderDay();switchTab('n');toast('Novedad guardada','🗣');
+}
+function delConductorNov(i){if(!isEditor){showPinModal();return;}if(!confirm('¿Eliminar?'))return;D().novedadesConductores.splice(i,1);save(curIdx);renderDay();switchTab('n');}
+
+// ═══════════════════════════════════════════════
+//  TAB PENDIENTES
+// ═══════════════════════════════════════════════
+function bldPend(){
+  const d=D();const isLast=curIdx===state.days.length-1;
+  const rows=d.pendientes.length===0?`<tr><td colspan="3"><div class="nodata"><div style="font-size:26px">📌</div><p>Sin pendientes</p></div></td></tr>`
+    :d.pendientes.map((p,i)=>`<tr><td><span class="placa">${p.placa}</span></td><td>${esc(p.obs)||'—'}</td><td>${isLast&&isEditor?`<button class="ibtn" onclick="delPend(${i})">🗑</button>`:''}</td></tr>`).join('');
+  return`<div class="panel">
+    <div class="panel-hd"><div class="ptitle">📌 Pendientes — ${fmtF(d.fecha)}</div>${isLast&&isEditor?`<button class="btn bo btn-sm" onclick="showAddPend()">＋ Agregar</button>`:''}</div>
+    <div id="ap-c"></div>
+    <div class="twrap"><table><thead><tr><th>Placa</th><th>Observación</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function showAddPend(){if(!isEditor){showPinModal();return;}
+  document.getElementById('ap-c').innerHTML=`<div class="iform on"><div class="fg g2" style="margin-bottom:8px">
+    <div><label>Placa</label><div class="acw"><input id="ap-p" class="aci-inp" data-al="ap-ac" placeholder="Buscar…" autocomplete="off" oninput="this.value=this.value.toUpperCase()"/><div class="acl" id="ap-ac"></div></div></div>
+    <div><label>Observación</label><input id="ap-ob" placeholder="Actividad pendiente…"/></div></div>
+    <div class="frow"><button class="btn bo btn-sm" onclick="document.getElementById('ap-c').innerHTML=''">Cancelar</button><button class="btn bp btn-sm" onclick="savePend()">Guardar</button></div>
+  </div>`;setupAC();
+}
+function savePend(){
+  if(!isEditor){showPinModal();return;}const placa=document.getElementById('ap-p').value.trim().toUpperCase();
+  if(!placa){alert('Ingresa la placa');return;}
+  D().pendientes.push({placa,obs:document.getElementById('ap-ob').value.trim()});
+  save(curIdx);renderDay();switchTab('p');toast('Pendiente guardado','📌');
+}
+function delPend(i){if(!isEditor){showPinModal();return;}D().pendientes.splice(i,1);save(curIdx);renderDay();switchTab('p');}
+
+function eliminarDia(){
+  if(!isEditor){showPinModal();return;}const d=D();
+  if(!confirm(`¿Eliminar el día ${fmtF(d.fecha)}?`))return;
+  const fecha=d.fecha;state.days.splice(curIdx,1);saveLocal();deleteFromFirebase(fecha);curIdx=null;
+  renderSidebar();document.getElementById('welcome').style.display='';document.getElementById('day-view').style.display='none';
+  toast('Día eliminado','🗑');
+}
+function editOP(){
+  if(!isEditor){showPinModal();return;}const d=D();
+  const v=prompt('Tripulación operativa (OP):',d.op!=null?d.op:'');if(v===null)return;
+  const n=parseInt(v);d.op=isNaN(n)?null:n;save(curIdx);renderDay();toast('OP actualizado','👥');
+}
+
+// ═══════════════════════════════════════════════
+//  HISTORIAL DE PLACA
+// ═══════════════════════════════════════════════
+function showPlacaDetail(placa){
+  const registros=[];
+  state.days.forEach(d=>{
+    d.placasEnTaller.forEach(p=>{
+      if(p.placa===placa){
+        const retorno=d.retornados.find(r=>r.placa===placa&&r.fechaEntrega===d.fecha);
+        registros.push({fecha:d.fecha,fechaIngreso:p.fechaIngreso,novedad:p.novedad,status:p.status,taller:p.taller,diasEnTaller:p.diasEnTaller,retornado:p.retornado,reparacion:retorno?retorno.reparacion:null,fechaEntrega:retorno?retorno.fechaEntrega:null});
+      }
+    });
+    d.retornados.forEach(r=>{
+      if(r.placa===placa&&!registros.find(x=>x.fechaEntrega===r.fechaEntrega&&x.fechaIngreso===r.fechaIngreso)){
+        registros.push({fecha:d.fecha,fechaIngreso:r.fechaIngreso,novedad:'—',status:'RETORNADO',taller:r.taller,diasEnTaller:null,retornado:true,reparacion:r.reparacion,fechaEntrega:r.fechaEntrega});
+      }
+    });
+  });
+  // Agrupar por evento (placa+fechaIngreso) — CORRECCIÓN: usar max de dias
+  const eventos={};
+  registros.forEach(r=>{
+    const key=r.fechaIngreso||r.fecha;
+    if(!eventos[key])eventos[key]={fechaIngreso:r.fechaIngreso||r.fecha,novedades:new Set(),talleres:new Set(),statuses:new Set(),diasMax:0,fechaEntrega:null,reparacion:null};
+    const ev=eventos[key];
+    if(r.novedad&&r.novedad!=='—')ev.novedades.add(r.novedad);
+    if(r.taller)ev.talleres.add(r.taller);
+    if(r.status&&r.status!=='RETORNADO')ev.statuses.add(r.status);
+    if(r.diasEnTaller&&r.diasEnTaller>ev.diasMax)ev.diasMax=r.diasEnTaller;
+    if(r.retornado&&r.fechaEntrega){ev.fechaEntrega=r.fechaEntrega;ev.reparacion=r.reparacion;}
+  });
+  const evList=Object.values(eventos).sort((a,b)=>b.fechaIngreso.localeCompare(a.fechaIngreso));
+  const totalDias=evList.reduce((s,e)=>s+e.diasMax,0);
+  const rows=evList.length===0?`<tr><td colspan="7"><div class="nodata"><p>Sin registros para esta placa</p></div></td></tr>`
+    :evList.map((ev,i)=>{
+      const novs=[...ev.novedades].join(', ')||'—';const talls=[...ev.talleres].join(', ')||'—';
+      const sta=ev.statuses.has('BLOQUEADO')?`<span class="badge b-bl">⛔ BLOQUEADO</span>`:ev.statuses.has('INOPERATIVO')?`<span class="badge b-in">🔴 INOPERATIVO</span>`:`<span class="badge b-re">🟣 RESTRICCIÓN</span>`;
+      const entrega=ev.fechaEntrega?`<span style="color:var(--green);font-weight:700">✅ ${fmtF(ev.fechaEntrega)}</span>`:`<span style="color:var(--orange);font-weight:600">⏳ En taller</span>`;
+      return`<tr><td style="font-weight:700;color:var(--navy)">#${evList.length-i}</td><td style="font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap">${fmtF(ev.fechaIngreso)}</td><td style="max-width:200px">${esc(novs)}</td><td>${sta}</td><td style="font-size:11px">${esc(talls)}</td><td style="text-align:center">${ev.diasMax>0?`<span class="dp ${ev.diasMax>=10?'hi':''}">${ev.diasMax}d</span>`:'—'}</td><td>${entrega}</td></tr>`;
+    }).join('');
+  document.getElementById('m-placa-title').textContent=placa;
+  document.getElementById('m-placa-sub').textContent=`${evList.length} ingreso${evList.length!==1?'s':''} · ${totalDias} días acumulados`;
+  document.getElementById('m-placa-body').innerHTML=rows;
+  openM('m-placa');
+}
+
+// ═══════════════════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════════════════
+function renderAn(){
+  const av=document.getElementById('an-view');
+  const meses=[...new Set(state.days.map(d=>d.fecha.slice(0,7)))];
+  const semanas=[...new Set(state.days.map(d=>{const dt=new Date(d.fecha);const jan4=new Date(dt.getFullYear(),0,4);const dow=jan4.getDay()||7;const w1=new Date(jan4.getTime()-(dow-1)*864e5);const wk=Math.floor((dt-w1)/(7*864e5))+1;return`${dt.getFullYear()}-W${String(wk).padStart(2,'0')}`;}))];
+  const anios=[...new Set(state.days.map(d=>d.fecha.slice(0,4)))];
+  av.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+      <div><h2 style="font-family:'Syne',sans-serif;font-size:17px;font-weight:800">📊 Informe</h2><p style="font-size:10px;color:var(--slate)">Flota LIS Liviana · Meta ≤${META_TALLER} en taller</p></div>
+      <button class="btn bs btn-sm" onclick="doExcel()">⬇ Excel</button>
+    </div>
+    <div class="fbar">
+      <div><label>Período</label><select id="an-t" onchange="updateFUI()"><option value="todos">Todos los días</option><option value="dia">Día específico</option><option value="semana">Semana</option><option value="mes">Mes</option><option value="año">Año</option></select></div>
+      <div id="an-vw"></div>
+      <button class="btn bp btn-sm" style="align-self:flex-end" onclick="runAn()">Aplicar</button>
+      <button class="btn bo btn-sm" style="align-self:flex-end" id="an-clear-btn" onclick="clearAnFilter()" style="display:none">✕ Limpiar</button>
+    </div>
+    <div id="an-c"></div>`;
+  av._m=meses;av._s=semanas;av._a=anios;
+  runAn();
+}
+function updateFUI(){
+  const t=document.getElementById('an-t').value;const w=document.getElementById('an-vw');const av=document.getElementById('an-view');
+  if(t==='dia'){const fechas=[...state.days].reverse().map(d=>d.fecha);w.innerHTML=`<div><label>Fecha</label><select id="an-v">${fechas.map(f=>`<option value="${f}">${fmtF(f)}</option>`).join('')}</select></div>`;}
+  else if(t==='semana')w.innerHTML=`<div><label>Semana</label><select id="an-v">${(av._s||[]).map(s=>`<option>${s}</option>`).join('')}</select></div>`;
+  else if(t==='mes')w.innerHTML=`<div><label>Mes</label><select id="an-v">${(av._m||[]).map(m=>`<option>${m}</option>`).join('')}</select></div>`;
+  else if(t==='año')w.innerHTML=`<div><label>Año</label><select id="an-v">${(av._a||[]).map(a=>`<option>${a}</option>`).join('')}</select></div>`;
+  else w.innerHTML='';
+  const cb=document.getElementById('an-clear-btn');if(cb)cb.style.display=(t!=='todos')?'':'none';
+}
+function clearAnFilter(){const sel=document.getElementById('an-t');if(sel){sel.value='todos';updateFUI();runAn();}}
+function filterDays(){
+  const t=document.getElementById('an-t')?.value||'todos';const v=document.getElementById('an-v')?.value||'';
+  if(t==='todos')return state.days;
+  return state.days.filter(d=>{
+    const dt=new Date(d.fecha);
+    if(t==='dia')return d.fecha===v;
+    if(t==='mes'){const[y,m]=v.split('-');return dt.getFullYear()===+y&&dt.getMonth()===+m-1;}
+    if(t==='año')return dt.getFullYear()===+v;
+    if(t==='semana'){const[y,w]=v.split('-W').map(Number);const jan4=new Date(y,0,4);const dow=jan4.getDay()||7;const w1=new Date(jan4.getTime()-(dow-1)*864e5);const wkM=new Date(w1.getTime()+(w-1)*7*864e5);const wkS=new Date(wkM.getTime()+6*864e5);return dt>=wkM&&dt<=wkS;}
+    return true;
+  });
+}
+function runAn(){
+  const days=filterDays();const el=document.getElementById('an-c');
+  if(!days.length){el.innerHTML=`<div class="nodata" style="padding:50px"><div style="font-size:30px">📭</div><p>Sin datos para este período</p></div>`;return;}
+  const iL=days.map(d=>({...getDispInfo(d),fecha:d.fecha,op:d.op,total:d.total}));
+  const avgPct=iL.reduce((a,i)=>a+i.pct,0)/iL.length;
+  const avgT=iL.reduce((a,i)=>a+i.enTaller,0)/iL.length;
+  const diasM=iL.filter(i=>i.enTaller<=META_TALLER).length;
+  const pctM=Math.round(diasM/iL.length*100);
+  const dwOP=iL.filter(i=>i.op!=null);const avgOP=dwOP.length?Math.round(dwOP.reduce((a,i)=>a+i.op,0)/dwOP.length):null;
+  const diasOPgt=dwOP.filter(i=>i.op>i.disp).length;
+
+  // TOP PLACAS — CORRECCIÓN: usar max por evento (no suma de snapshots diarios)
+  const pmEvt={};
+  days.forEach(d=>d.placasEnTaller.forEach(p=>{
+    const key=p.placa+'|'+(p.fechaIngreso||'');
+    if(!pmEvt[key]||p.diasEnTaller>pmEvt[key].dias)pmEvt[key]={placa:p.placa,dias:p.diasEnTaller};
+  }));
+  const pmAgg={};Object.values(pmEvt).forEach(v=>{pmAgg[v.placa]=(pmAgg[v.placa]||0)+v.dias;});
+  const topP=Object.entries(pmAgg).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxPD=topP[0]?.[1]||1;
+
+  const sm={};
+  days.forEach(d=>d.placasEnTaller.forEach(p=>{const s=getSist(p.novedad,p.sistema);sm[s]=(sm[s]||0)+1;}));
+  const topS=Object.entries(sm).sort((a,b)=>b[1]-a[1]).slice(0,7);const maxS=topS[0]?.[1]||1;
+  const nv={};
+  days.forEach(d=>d.placasEnTaller.forEach(p=>{if(p.novedad){const k=p.novedad.toUpperCase().trim();nv[k]=(nv[k]||0)+1;}}));
+  const topN=Object.entries(nv).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  el.innerHTML=`
+    <div class="kgrid k5" style="margin-bottom:12px">
+      <div class="kpi k-bl"><div class="kpi-lbl">Días</div><div class="kpi-val">${iL.length}</div><div class="kpi-sub">analizados</div></div>
+      <div class="kpi k-gr"><div class="kpi-lbl">% Disp.</div><div class="kpi-val" style="color:${pc(avgPct)}">${avgPct.toFixed(1)}%</div><div class="kpi-sub">promedio</div></div>
+      <div class="kpi k-or"><div class="kpi-lbl">Prom. taller</div><div class="kpi-val">${avgT.toFixed(1)}</div><div class="kpi-sub">vs meta ${META_TALLER}</div></div>
+      <div class="kpi k-am"><div class="kpi-lbl">En meta</div><div class="kpi-val" style="color:${pctM>=80?'var(--green)':pctM>=60?'var(--amber)':'var(--red)'}">${diasM}/${iL.length}</div><div class="kpi-sub">${pctM}% cumpl.</div></div>
+      <div class="kpi k-pu"><div class="kpi-lbl">OP prom.</div><div class="kpi-val">${avgOP!=null?avgOP:'—'}</div><div class="kpi-sub">${diasOPgt>0?`⚠️ ${diasOPgt}d`:avgOP!=null?'✅':'sin datos'}</div></div>
+    </div>
+    <div class="agrid" style="margin-bottom:12px">
+      <div class="sc"><div class="sc-title">📅 Disponibilidad por día</div>
+        <div style="display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto">
+          ${iL.map(r=>{const opTxt=r.op!=null?`<span style="color:${r.op>r.disp?'var(--red)':'var(--slate)'}">OP:${r.op}</span>`:'';return`<div class="ac-row"><span class="ac-date">${fmtF(r.fecha)}</span><div class="ac-bw"><div class="ac-bf" style="width:${r.pct}%;background:${pc(r.pct)}"></div></div><span class="ac-pct" style="color:${pc(r.pct)}">${r.pct}%</span><span style="font-size:9px;text-align:right">${opTxt}</span></div>`;}).join('')}
+        </div>
+      </div>
+      <div class="sc"><div class="sc-title">🎯 Cumplimiento meta (≤${META_TALLER})</div>
+        <div style="display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto">
+          ${iL.map(r=>{const bp=Math.min(100,Math.round(r.enTaller/(META_TALLER*2)*100));const lp=50;const ok=r.enTaller<=META_TALLER;const clr=ok?'var(--green)':r.enTaller<=META_TALLER+1?'var(--amber)':'var(--red)';return`<div class="meta-chart-row"><span class="mcr-date">${fmtF(r.fecha)}</span><div class="mcr-bar"><div class="mcr-fill" style="width:${bp}%;background:${clr}"></div><div class="mcr-limit" style="left:${lp}%"></div></div><span class="mcr-val" style="color:${clr}">${r.enTaller}</span><span style="font-size:9px;padding:1px 5px;border-radius:20px;background:${ok?'var(--green-lt)':r.enTaller<=META_TALLER+1?'var(--amber-lt)':'var(--red-lt)'};color:${clr}">${ok?'✅':r.enTaller<=META_TALLER+1?'⚠️':'🚨'}</span></div>`;}).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="agrid" style="margin-bottom:12px">
+      <div class="sc"><div class="sc-title">🚐 Top placas en taller</div>
+        ${topP.length===0?`<div class="nodata"><p>Sin datos</p></div>`:topP.map(([p,d],i)=>`<div class="ri" onclick="showPlacaDetail('${p}')" style="cursor:pointer" onmouseover="this.style.background='var(--blue-lt)'" onmouseout="this.style.background=''">
+          <div class="rpos ${i<3?'rg'+(i+1):''}">${i+1}</div>
+          <div class="rbw"><div class="rlbl"><span class="placa">${p}</span> <span style="font-size:9px;color:var(--blue)">→ ver historial</span></div><div class="rbar"><div class="rfill" style="width:${Math.round(d/maxPD*100)}%"></div></div></div>
+          <div class="rval">${d}d</div>
+        </div>`).join('')}
+      </div>
+      <div class="sc"><div class="sc-title">⚙️ Sistemas afectados</div>
+        ${topS.length===0?`<div class="nodata"><p>Sin datos</p></div>`:topS.map(([s,n],i)=>`<div class="ri"><div class="rpos ${i<3?'rg'+(i+1):''}">${i+1}</div><div class="rbw"><div class="rlbl">${s}</div><div class="rbar"><div class="rfill" style="width:${Math.round(n/maxS*100)}%;background:var(--orange)"></div></div></div><div class="rval">${n}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="sc" style="margin-bottom:12px"><div class="sc-title">🔍 Novedades frecuentes</div>
+      ${topN.length===0?`<div class="nodata"><p>Sin datos</p></div>`:`<div style="display:flex;flex-wrap:wrap;margin-top:3px">${topN.map(([n,c])=>`<div class="chip">${n}<span>${c}</span></div>`).join('')}</div>`}
+    </div>
+    <div class="sc"><div class="sc-title">📋 Detalle por día</div>
+      <div class="twrap"><table>
+        <thead><tr><th>Fecha</th><th>Total</th><th>Disp.</th><th>Taller</th><th>Meta</th><th>%</th><th>OP</th><th class="hide-mob">OP vs D.</th><th>Ret.</th></tr></thead>
+        <tbody>${days.map((d,i)=>{const info=iL[i];const meta=info.enTaller<=META_TALLER;const op=info.op;let opD='—',opC='var(--slate)';if(op!=null){const diff=op-info.disp;opD=diff>0?`+${diff}`:diff<0?`${diff}`:'=';opC=diff>0?'var(--red)':diff<0?'var(--green)':'var(--slate)';}
+          return`<tr><td style="font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap">${fmtF(d.fecha)}</td><td>${d.total}</td><td style="color:var(--green);font-weight:700">${info.disp}</td><td style="color:var(--orange);font-weight:700">${info.enTaller}</td><td>${meta?`<span class="badge b-op" style="font-size:9px">✅</span>`:`<span class="badge b-in" style="font-size:9px">⚠️+${info.enTaller-META_TALLER}</span>`}</td><td style="font-family:'DM Mono',monospace;font-weight:700;color:${pc(info.pct)}">${info.pct}%</td><td style="font-family:'DM Mono',monospace;font-weight:700;color:var(--purple)">${op!=null?op:'—'}</td><td class="hide-mob" style="font-weight:700;color:${opC};font-size:10px">${opD}</td><td>${d.retornados.length}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  GESTIÓN
+// ═══════════════════════════════════════════════
+const PLANES_KEY='flota_lis_planes_v1';
+function loadPlanes(){try{return JSON.parse(localStorage.getItem(PLANES_KEY)||'[]');}catch{return[];}}
+function savePlanes(pl){localStorage.setItem(PLANES_KEY,JSON.stringify(pl));}
+let planes=loadPlanes();
+
+function renderGest(filtroMes=null,filtroAnio=null){
+  if(filtroMes===null&&filtroAnio===null){filtroMes=window._gestFiltroMes||null;filtroAnio=window._gestFiltroAnio||null;}
+  else{window._gestFiltroMes=filtroMes;window._gestFiltroAnio=filtroAnio;}
+  if(!state.days.length){document.getElementById('gest-view').innerHTML=`<div class="nodata" style="padding:80px"><div style="font-size:40px">📭</div><p>Sin datos aún</p></div>`;return;}
+
+  const meses={};
+  state.days.forEach(d=>{const m=d.fecha.slice(0,7);if(!meses[m])meses[m]={key:m,dias:[]};meses[m].dias.push(d);});
+  const nomM=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  Object.values(meses).forEach(m=>{const[y,mo]=m.key.split('-');m.label=nomM[+mo]+' '+y;});
+  const mesList=Object.values(meses).sort((a,b)=>a.key.localeCompare(b.key));
+
+  let mesActual,mesAnterior;
+  if(filtroMes){mesActual=mesList.find(m=>m.key===filtroMes)||mesList[mesList.length-1];const idx2=mesList.indexOf(mesActual);mesAnterior=idx2>0?mesList[idx2-1]:null;}
+  else if(filtroAnio){
+    const ym=mesList.filter(m=>m.key.startsWith(filtroAnio));const allD=ym.flatMap(m=>m.dias);
+    if(allD.length){mesActual={key:filtroAnio,label:filtroAnio,dias:allD};const pm=mesList.filter(m=>m.key.startsWith(String(+filtroAnio-1)));const pd=pm.flatMap(m=>m.dias);mesAnterior=pd.length?{key:String(+filtroAnio-1),label:String(+filtroAnio-1),dias:pd}:null;}
+    else{mesActual=mesList[mesList.length-1];mesAnterior=mesList.length>1?mesList[mesList.length-2]:null;}
+  }else{mesActual=mesList[mesList.length-1];mesAnterior=mesList.length>1?mesList[mesList.length-2]:null;}
+
+  function mesStats(m){
+    const info=m.dias.map(d=>getDispInfo(d));
+    const avgPct=info.reduce((a,i)=>a+i.pct,0)/info.length;
+    const avgTaller=info.reduce((a,i)=>a+i.enTaller,0)/info.length;
+    const diasMeta=info.filter(i=>i.enTaller<=META_TALLER).length;
+    const sistemas={};m.dias.forEach(d=>d.placasEnTaller.forEach(p=>{const s=getSist(p.novedad,p.sistema);sistemas[s]=(sistemas[s]||0)+1;}));
+    const topSist=Object.entries(sistemas).sort((a,b)=>b[1]-a[1]);
+    // TOP PLACAS — CORRECCIÓN
+    const placasEvt={};
+    m.dias.forEach(d=>d.placasEnTaller.forEach(p=>{const key=p.placa+'|'+(p.fechaIngreso||'');if(!placasEvt[key]||p.diasEnTaller>placasEvt[key].dias)placasEvt[key]={placa:p.placa,dias:p.diasEnTaller};}));
+    const placasDias={};Object.values(placasEvt).forEach(v=>{placasDias[v.placa]=(placasDias[v.placa]||0)+v.dias;});
+    const topPlacas=Object.entries(placasDias).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const totalRetornados=m.dias.reduce((a,d)=>a+d.retornados.length,0);
+    return{avgPct,avgTaller,diasMeta,topSist,topPlacas,totalRetornados,totalDias:m.dias.length};
+  }
+
+  const lastDay=state.days[state.days.length-1];
+  const alertas=[];const enTallerActivos=lastDay.placasEnTaller.filter(p=>!p.retornado);
+  enTallerActivos.forEach(p=>{
+    if(p.diasEnTaller>=10&&!isRestriccion(p.status))alertas.push({nivel:'red',icon:'🚨',titulo:`${p.placa} lleva ${p.diasEnTaller} días en taller`,sub:`${p.novedad||'Sin novedad'} · ${p.taller||'Sin taller'} · Ingresó ${fmtF(p.fechaIngreso)}`});
+    else if(p.diasEnTaller>=5&&!isRestriccion(p.status))alertas.push({nivel:'amber',icon:'⚠️',titulo:`${p.placa} lleva ${p.diasEnTaller} días en taller`,sub:`${p.novedad||'Sin novedad'} · ${p.taller||'Sin taller'}`});
+  });
+  if(enTallerActivos.filter(p=>!isRestriccion(p.status)).length>META_TALLER){const sobre=enTallerActivos.filter(p=>!isRestriccion(p.status)).length-META_TALLER;alertas.unshift({nivel:'red',icon:'🎯',titulo:`Meta incumplida: ${sobre} vehículo${sobre>1?'s':''} sobre el límite de ${META_TALLER}`,sub:`Hoy hay ${enTallerActivos.filter(p=>!isRestriccion(p.status)).length} vehículos inoperativos en taller`});}
+  const stActual=mesStats(mesActual);
+  if(stActual.topSist.length>0&&stActual.topSist[0][1]>=2)alertas.push({nivel:'amber',icon:'⚙️',titulo:`Sistema más afectado: ${stActual.topSist[0][0]}`,sub:`${stActual.topSist[0][1]} ingresos este mes`});
+  if(stActual.avgPct<88)alertas.push({nivel:'red',icon:'📉',titulo:`Disponibilidad bajo el 88% este mes`,sub:`Promedio: ${stActual.avgPct.toFixed(1)}%`});
+  else if(stActual.avgPct>=92)alertas.push({nivel:'green',icon:'🌟',titulo:`Excelente disponibilidad este mes`,sub:`Promedio: ${stActual.avgPct.toFixed(1)}%`});
+  if(!alertas.length)alertas.push({nivel:'green',icon:'✅',titulo:'Todo en orden',sub:'No hay alertas activas'});
+
+  const trendData=mesList.map(m=>({label:m.label,pct:mesStats(m).avgPct.toFixed(1),mes:m.key}));
+  const minPct=Math.min(...trendData.map(t=>+t.pct))-5;const maxPct=Math.max(...trendData.map(t=>+t.pct))+5;
+  const svgW=500,svgH=120,padL=30,padR=10,padT=10,padB=30;
+  const xStep=trendData.length>1?(svgW-padL-padR)/(trendData.length-1):0;
+  const yScale=v=>padT+(svgH-padT-padB)*(1-(v-minPct)/(maxPct-minPct));
+  const points=trendData.map((t,i)=>`${padL+i*xStep},${yScale(+t.pct)}`).join(' ');
+  const areaPoints=`${padL},${svgH-padB} `+trendData.map((t,i)=>`${padL+i*xStep},${yScale(+t.pct)}`).join(' ')+` ${padL+(trendData.length-1)*xStep},${svgH-padB}`;
+
+  const stA=stActual;const maxSist=stA.topSist[0]?.[1]||1;const maxPlaca=stA.topPlacas[0]?.[1]||1;
+  const anios=[...new Set(mesList.map(m=>m.key.slice(0,4)))].sort((a,b)=>b.localeCompare(a));
+  const anioActivo=filtroAnio||(filtroMes?filtroMes.slice(0,4):mesActual.key.slice(0,4));
+  const mesesDelAnio=mesList.filter(m=>m.key.startsWith(anioActivo)).reverse();
+  const anioTabs=anios.map(a=>`<button class="mtab ${a===filtroAnio?'on':''}" onclick="renderGest(null,'${a}')" style="font-size:12px;padding:5px 14px">${a}</button>`).join('');
+  const mesTabs=mesesDelAnio.map(m=>{const[y,mo]=m.key.split('-');return`<button class="mtab ${filtroMes===m.key?'on':''}" onclick="renderGest('${m.key}',null)" style="font-size:11px">${nomM[+mo]}</button>`;}).join('');
+  const periodoLabel=filtroAnio?filtroAnio:filtroMes?mesActual.label:mesActual.label+' (actual)';
+
+  let compHTML=`<div class="nodata"><p>Solo hay un mes de datos</p></div>`;
+  if(mesAnterior){
+    const stP=mesStats(mesAnterior);
+    compHTML=`<div class="comp-row" style="font-weight:700;font-size:10px;color:var(--slate);text-transform:uppercase"><div>Métrica</div><div style="text-align:center">${mesActual.label}</div><div style="text-align:center">${mesAnterior.label}</div></div>`
+      +[{lbl:'% Disponibilidad',a:stA.avgPct.toFixed(1)+'%',p:stP.avgPct.toFixed(1)+'%',better:stA.avgPct>=stP.avgPct},{lbl:'Prom. en taller',a:stA.avgTaller.toFixed(1),p:stP.avgTaller.toFixed(1),better:stA.avgTaller<=stP.avgTaller},{lbl:'Días en meta',a:stA.diasMeta+'/'+stA.totalDias,p:stP.diasMeta+'/'+stP.totalDias,better:stA.diasMeta>=stP.diasMeta},{lbl:'Retornados',a:stA.totalRetornados,p:stP.totalRetornados,better:true}]
+      .map(r=>`<div class="comp-row"><div class="comp-lbl">${r.lbl}</div><div class="comp-val" style="color:${r.better?'var(--green)':'var(--red)'}">${r.a} ${r.better?'▲':'▼'}</div><div class="comp-val" style="color:var(--slate)">${r.p}</div></div>`).join('');
+  }
+
+  function renderPlanesHTML(){
+    if(!planes.length)return`<div class="nodata"><p>Sin planes de acción.</p></div>`;
+    return planes.slice().reverse().map((pl,ri)=>{const i=planes.length-1-ri;return`<div class="plan-item"><div class="plan-header"><div><div class="plan-mes">${pl.mes||'—'}</div><div class="plan-falla">⚙️ ${esc(pl.falla)}</div></div><div style="display:flex;gap:6px;align-items:center"><span class="plan-badge" style="background:${pl.estado==='En proceso'?'var(--amber-lt)':'var(--green-lt)'};color:${pl.estado==='En proceso'?'var(--amber)':'var(--green)'}">${pl.estado||'Completado'}</span>${isEditor?`<button class="ibtn" onclick="deletePlan(${i})">🗑</button>`:''}</div></div><div class="plan-accion">📋 ${esc(pl.accion)}</div>${pl.resultado?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">✅ Resultado: ${esc(pl.resultado)}</div>`:''}</div>`;}).join('');
+  }
+
+  document.getElementById('gest-view').innerHTML=`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div><h2 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800">🚨 Gestión y Alertas</h2><p style="font-size:11px;color:var(--slate)">Flota LIS Liviana · Período: <strong>${periodoLabel}</strong></p></div>
+        <button class="btn bo btn-sm" onclick="window._gestFiltroMes=null;window._gestFiltroAnio=null;renderGest(null,null)">↺ Mes actual</button>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;align-items:center"><span style="font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">Año</span>${anioTabs}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center"><span style="font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.5px;margin-right:4px">Mes</span>${mesTabs}</div>
+    </div>
+
+    <div class="dash-card" style="margin-bottom:16px">
+      <div class="dash-title">🔔 Alertas activas — ${fmtF(lastDay.fecha)}</div>
+      ${alertas.map(a=>`<div class="alert-item a-${a.nivel}"><span class="alert-icon">${a.icon}</span><div class="alert-txt"><div class="alert-title">${a.titulo}</div><div class="alert-sub">${a.sub}</div></div></div>`).join('')}
+    </div>
+
+    <div class="dash-card" style="margin-bottom:16px">
+      <div class="dash-title">🚐 Vehículos en taller ahora <span style="font-size:10px;font-weight:400;color:var(--slate);margin-left:4px">clic para ver historial</span></div>
+      <div class="veh-grid">
+        ${enTallerActivos.length===0?'<div class="nodata"><p>✅ Todos los vehículos disponibles</p></div>'
+          :enTallerActivos.map(p=>{const cls=p.diasEnTaller>=10?'vc-bad':p.diasEnTaller>=5?'vc-warn':'vc-ok';const emoji=isRestriccion(p.status)?'🟡':p.diasEnTaller>=10?'🔴':p.diasEnTaller>=5?'🟠':'🟢';
+            return`<div class="veh-card ${cls}" onclick="showPlacaDetail('${p.placa}')"><span class="veh-car">🚐</span><div>${emoji}</div><div class="veh-placa">${p.placa}</div><div class="veh-dias" style="color:${p.diasEnTaller>=10?'var(--red)':p.diasEnTaller>=5?'var(--amber)':'var(--green)'}">${p.diasEnTaller}d</div><div class="veh-sist">${getSist(p.novedad,p.sistema)}</div></div>`;}).join('')}
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-title">📈 Tendencia de disponibilidad</div>
+        ${trendData.length<2?'<div class="nodata"><p>Se necesitan al menos 2 meses</p></div>':`<svg class="trend-svg" viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto">
+          <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity=".25"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+          ${[0,.25,.5,.75,1].map(f=>{const y=padT+(svgH-padT-padB)*f;const v=(maxPct-f*(maxPct-minPct)).toFixed(0);return`<line x1="${padL}" y1="${y}" x2="${svgW-padR}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/><text x="${padL-4}" y="${y+4}" font-size="9" fill="#94a3b8" text-anchor="end">${v}%</text>`;}).join('')}
+          <polygon points="${areaPoints}" fill="url(#tg)"/>
+          <polyline points="${points}" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          ${trendData.map((t,i)=>{const x=padL+i*xStep;const y=yScale(+t.pct);const clr=+t.pct>=90?'#059669':+t.pct>=85?'#d97706':'#dc2626';return`<circle cx="${x}" cy="${y}" r="5" fill="${clr}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${svgH-padB+14}" font-size="9" fill="#64748b" text-anchor="middle">${t.label}</text><text x="${x}" y="${y-9}" font-size="9" fill="${clr}" text-anchor="middle" font-weight="700">${t.pct}%</text>`;}).join('')}
+        </svg>`}
+      </div>
+      <div class="dash-card"><div class="dash-title">📊 Comparativo mensual</div>${compHTML}</div>
+      <div class="dash-card"><div class="dash-title">⚙️ Sistemas afectados — ${mesActual.label}</div>
+        <div class="bar-chart">${stA.topSist.slice(0,7).map(([s,n])=>`<div class="bar-row"><span class="bar-lbl">${s}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxSist*100)}%;background:var(--orange)"></div></div><span class="bar-val" style="color:var(--orange)">${n}</span></div>`).join('')||'<div class="nodata"><p>Sin datos</p></div>'}</div>
+      </div>
+      <div class="dash-card"><div class="dash-title">🚐 Top placas — ${mesActual.label}</div>
+        <div class="bar-chart">${stA.topPlacas.map(([p,d],i)=>{const colors=['#2563eb','#7c3aed','#059669','#d97706','#dc2626','#0891b2','#64748b','#1d4ed8'];return`<div class="bar-row" onclick="showPlacaDetail('${p}')" style="cursor:pointer"><span class="placa" style="font-size:10px">${p}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(d/maxPlaca*100)}%;background:${colors[i%colors.length]}"></div></div><span class="bar-val" style="color:${colors[i%colors.length]}">${d}d</span></div>`;}).join('')||'<div class="nodata"><p>Sin datos</p></div>'}</div>
+      </div>
+      <div class="dash-card dash-card-full">
+        <div class="dash-title" style="justify-content:space-between"><span>📋 Planes de acción</span>${isEditor?`<button class="btn bp btn-sm" onclick="showAddPlan()">＋ Agregar plan</button>`:''}</div>
+        <div id="planes-list">${renderPlanesHTML()}</div>
+      </div>
+    </div>`;
+}
+
+function showAddPlan(){if(!isEditor){showPinModal();return;}const meses=[...new Set(state.days.map(d=>d.fecha.slice(0,7)))].reverse();const nomM=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const mesOpts=meses.map(m=>{const[y,mo]=m.split('-');return`<option value="${m}">${nomM[+mo]} ${y}</option>`;}).join('');openM('m-plan');document.getElementById('plan-mes-sel').innerHTML=mesOpts;}
+function savePlan(){
+  if(!isEditor){showPinModal();return;}
+  const mes=document.getElementById('plan-mes-sel').value;const falla=document.getElementById('plan-falla').value.trim();const accion=document.getElementById('plan-accion').value.trim();
+  if(!falla||!accion){alert('Completa la falla y la acción');return;}
+  const nomM=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];const[y,mo]=mes.split('-');
+  planes.push({mes:nomM[+mo]+' '+y,mesKey:mes,falla,accion,resultado:document.getElementById('plan-resultado').value.trim(),estado:document.getElementById('plan-estado').value});
+  savePlanes(planes);closeM('m-plan');
+  const el=document.getElementById('planes-list');if(el)el.innerHTML=renderPlanesInner();
+  toast('Plan guardado','📋');
+}
+function renderPlanesInner(){
+  if(!planes.length)return`<div class="nodata"><p>Sin planes de acción.</p></div>`;
+  return planes.slice().reverse().map((pl,ri)=>{const i=planes.length-1-ri;return`<div class="plan-item"><div class="plan-header"><div><div class="plan-mes">${pl.mes||'—'}</div><div class="plan-falla">⚙️ ${esc(pl.falla)}</div></div><div style="display:flex;gap:6px;align-items:center"><span class="plan-badge" style="background:${pl.estado==='En proceso'?'var(--amber-lt)':'var(--green-lt)'};color:${pl.estado==='En proceso'?'var(--amber)':'var(--green)'}">${pl.estado||'Completado'}</span>${isEditor?`<button class="ibtn" onclick="deletePlan(${i})">🗑</button>`:''}</div></div><div class="plan-accion">📋 ${esc(pl.accion)}</div>${pl.resultado?`<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">✅ ${esc(pl.resultado)}</div>`:''}</div>`;}).join('');
+}
+function deletePlan(i){if(!isEditor){showPinModal();return;}if(!confirm('¿Eliminar?'))return;planes.splice(i,1);savePlanes(planes);const el=document.getElementById('planes-list');if(el)el.innerHTML=renderPlanesInner();toast('Plan eliminado','🗑');}
+
+// ═══════════════════════════════════════════════
+//  CALENDARIO
+// ═══════════════════════════════════════════════
+let _calYear=new Date().getFullYear();let _calMonth=new Date().getMonth();
+function renderCal(){
+  const el=document.getElementById('cal-view');
+  if(!state.days.length){el.innerHTML='<div class="nodata" style="padding:80px"><div style="font-size:40px">📅</div><p>Sin datos aún</p></div>';return;}
+  const dayMap={};state.days.forEach(d=>{dayMap[d.fecha]=d;});
+  const years=[...new Set(state.days.map(d=>+d.fecha.slice(0,4)))].sort((a,b)=>b-a);
+  if(!years.includes(_calYear))_calYear=years[0];
+  const nomM=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const diasSem=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  function buildMonthHtml(year,month){
+    const firstDay=new Date(year,month,1);const lastDay=new Date(year,month+1,0);const startDow=(firstDay.getDay()+6)%7;const todayStr=today();
+    let cells='';
+    for(let i=0;i<startDow;i++)cells+=`<div class="cal-day cd-empty"></div>`;
+    for(let d=1;d<=lastDay.getDate();d++){
+      const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dayData=dayMap[dateStr];const isToday=dateStr===todayStr;
+      if(dayData){
+        const info=getDispInfo(dayData);const metaOk=info.enTaller<=META_TALLER;
+        const isDomCal=new Date(dateStr+'T12:00:00').getDay()===0;
+        const dayBg=isDomCal?'#f5f3ff':!metaOk?'#fef2f2':info.pct>=90?'#ecfdf5':info.pct>=85?'#fffbeb':'#fff7ed';
+        const dayBorder=isDomCal?'#7c3aed':!metaOk?'#dc2626':info.pct>=90?'#059669':info.pct>=85?'#d97706':'#ea580c';
+        const clr=info.pct>=90?'var(--green)':info.pct>=85?'var(--amber)':'var(--red)';
+        cells+=`<div class="cal-day${isToday?' cd-today':''}" style="background:${dayBg};border-color:${dayBorder};border-width:2px;border-style:solid" onclick="calDayClick('${dateStr}')" title="${dateStr}: ${info.pct}% disp · ${info.enTaller} en taller">
+          <div class="cal-dn">${d}</div>
+          <div class="cal-pct" style="color:${isDomCal?'#7c3aed':clr}">${isDomCal?'🔵':info.pct+'%'}</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:2px">
+            ${isDomCal?`<span style="font-size:8px;color:#7c3aed;font-weight:700">RD</span>`:`<span style="font-size:9px;font-family:monospace;font-weight:700;color:${!metaOk?'var(--red)':'var(--slate)'}">${info.enTaller}🚐</span>${!metaOk?'<span style="font-size:8px;color:var(--red);font-weight:700">⚠️</span>':'<span style="font-size:8px;color:var(--green)">✓</span>'}`}
+          </div>
+        </div>`;
+      }else{cells+=`<div class="cal-day" style="background:var(--bg);opacity:.4${isToday?';box-shadow:0 0 0 2px var(--blue)':''}" title="${dateStr}: sin registro"><div class="cal-dn" style="color:var(--slate)">${d}</div></div>`;}
+    }
+    const monthDays=state.days.filter(d=>d.fecha.startsWith(`${year}-${String(month+1).padStart(2,'0')}`));
+    const avgPct=monthDays.length?(monthDays.reduce((a,d)=>a+getDispInfo(d).pct,0)/monthDays.length).toFixed(1):null;
+    const diasMeta=monthDays.filter(d=>getDispInfo(d).enTaller<=META_TALLER).length;
+    const minPct=monthDays.length?Math.min(...monthDays.map(d=>getDispInfo(d).pct)):null;
+    return{cells,avgPct,diasMeta,minPct,total:monthDays.length};
+  }
+
+  const yearOpts=years.map(y=>`<button class="mtab ${y===_calYear?'on':''}" onclick="_calYear=${y};_calMonth=-1;renderCal()">${y}</button>`).join('');
+  const showSingleMonth=_calMonth>=0;
+
+  let mainContent='';
+  if(showSingleMonth){
+    const{cells,avgPct,diasMeta,minPct,total}=buildMonthHtml(_calYear,_calMonth);
+    const col=avgPct>=90?'var(--green)':avgPct>=85?'var(--amber)':'var(--red)';
+    mainContent=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="cal-month-nav">
+          <button class="btn bo btn-sm" onclick="calPrevMonth()">‹</button>
+          <h3 style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;min-width:160px;text-align:center">${nomM[_calMonth]} ${_calYear}</h3>
+          <button class="btn bo btn-sm" onclick="calNextMonth()">›</button>
+        </div>
+        <button class="btn bo btn-sm" onclick="_calMonth=-1;renderCal()">📅 Ver año completo</button>
+      </div>
+      ${avgPct!==null?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+        <div class="kpi k-gr"><div class="kpi-lbl">Disp. promedio</div><div class="kpi-val" style="color:${col}">${avgPct}%</div></div>
+        <div class="kpi k-am"><div class="kpi-lbl">Días en meta</div><div class="kpi-val">${diasMeta}/${total}</div></div>
+        <div class="kpi k-or"><div class="kpi-lbl">Peor día</div><div class="kpi-val" style="color:var(--red)">${minPct}%</div></div>
+        <div class="kpi k-bl"><div class="kpi-lbl">Días registrados</div><div class="kpi-val">${total}</div></div>
+      </div>`:''}
+      <div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:14px;box-shadow:var(--sh)">
+        <div class="cal-grid">${diasSem.map(d=>`<div class="cal-hdr">${d}</div>`).join('')}${cells}</div>
+        <div class="cal-legend">
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:#ecfdf5;border:2px solid #059669"></div>≥90% · en meta</div>
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:#fef2f2;border:2px solid #dc2626"></div>⚠️ Sobre meta</div>
+          <div class="cal-leg-item"><div class="cal-leg-dot" style="background:#f5f3ff;border:2px solid #7c3aed"></div>🔵 Rutina dominical</div>
+        </div>
+      </div>`;
+  }else{
+    let monthCards='';
+    for(let m=0;m<12;m++){
+      const{cells,avgPct,diasMeta,total}=buildMonthHtml(_calYear,m);
+      const col=!avgPct?'var(--slate)':+avgPct>=90?'var(--green)':+avgPct>=85?'var(--amber)':'var(--red)';
+      monthCards+=`<div style="background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:12px;box-shadow:var(--sh);cursor:pointer" onclick="_calMonth=${m};renderCal()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700">${nomM[m]}</div>
+          ${avgPct?`<span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:800;color:${col}">${avgPct}%</span>`:'<span style="font-size:10px;color:var(--slate)">sin datos</span>'}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">${diasSem.map(d=>`<div style="text-align:center;font-size:7px;font-weight:700;color:var(--slate)">${d[0]}</div>`).join('')}${(() => {
+          const firstDay=new Date(_calYear,m,1);const startDow=(firstDay.getDay()+6)%7;const lastDay=new Date(_calYear,m+1,0);let c='';
+          for(let i=0;i<startDow;i++)c+='<div style="aspect-ratio:1"></div>';
+          for(let d=1;d<=lastDay.getDate();d++){const ds=`${_calYear}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const dd=dayMap[ds];const bg=dd?getDispInfo(dd).enTaller<=META_TALLER&&getDispInfo(dd).pct>=90?'var(--green)':getDispInfo(dd).enTaller>META_TALLER?'var(--red)':'var(--amber)':'var(--border)';c+=`<div style="background:${bg};width:100%;aspect-ratio:1;border-radius:2px"></div>`;}
+          return c;
+        })()}</div>
+        ${total?`<div style="font-size:9px;color:var(--slate);margin-top:6px">${diasMeta}/${total} días en meta</div>`:''}
+      </div>`;
+    }
+    mainContent=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px">${monthCards}</div>`;
+  }
+
+  el.innerHTML=`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div><h2 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800">📅 Calendario de Disponibilidad</h2><p style="font-size:11px;color:var(--slate)">Flota LIS Liviana · Haz clic en un día para ver el detalle</p></div>
+        <button class="pdf-btn" onclick="generarPDF()">📄 Generar informe PDF</button>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;align-items:center"><span style="font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;margin-right:4px">Año</span>${yearOpts}</div>
+    </div>
+    ${mainContent}`;
+}
+function calDayClick(fecha){const idx=state.days.findIndex(d=>d.fecha===fecha);if(idx>=0)selectDay(idx);}
+function calPrevMonth(){_calMonth--;if(_calMonth<0){_calMonth=11;_calYear--;}renderCal();}
+function calNextMonth(){_calMonth++;if(_calMonth>11){_calMonth=0;_calYear++;}renderCal();}
+
+// ═══════════════════════════════════════════════
+//  EXPORTAR IMAGEN
+// ═══════════════════════════════════════════════
+async function exportImagen(){
+  const d=D();if(!d)return;toast('Generando imagen…','📸');
+  const info=getDispInfo(d);const activos=d.placasEnTaller.filter(p=>!p.retornado);
+  const enN=activos.filter(p=>!isRestriccion(p.status)).length;const restriccionCount=activos.filter(p=>isRestriccion(p.status)).length;const disp=d.total-enN;const pct=(disp/d.total*100).toFixed(1);
+  const tallerRows=activos.map(p=>`<tr><td style="font-family:monospace;font-weight:700;color:#1e3a5f;background:#dbeafe;padding:6px 8px;border-radius:4px">${p.placa}</td><td style="padding:6px 8px;color:#666">${fmtF(p.fechaIngreso)}</td><td style="padding:6px 8px">${esc(p.novedad)||'—'}</td><td style="padding:6px 8px">${p.status&&p.status.includes('BLOQUEADO')?'⛔ BLOQUEADO':p.status&&p.status.includes('RESTRICCI')?'🟣 RESTRICCIÓN':'🔴 INOPERATIVO'}</td><td style="padding:6px 8px;color:#666">${esc(p.taller)||'—'}</td><td style="padding:6px 8px;font-weight:700;color:${p.diasEnTaller>=10?'#dc2626':'#d97706'}">${p.diasEnTaller}d</td></tr>`).join('');
+  const retRows=d.retornados.length===0?`<tr><td colspan="4" style="padding:8px;color:#888;text-align:center">Ninguno retornó</td></tr>`:d.retornados.map(r=>`<tr><td style="font-family:monospace;font-weight:700;background:#dbeafe;padding:6px 8px">${r.placa}</td><td style="padding:6px 8px;color:#666">${fmtF(r.fechaIngreso)}</td><td style="padding:6px 8px">${esc(r.reparacion)||'—'}</td><td style="padding:6px 8px;color:#059669;font-weight:700">${fmtF(r.fechaEntrega)}</td></tr>`).join('');
+  const div=document.createElement('div');
+  div.style.cssText='position:fixed;left:-9999px;top:0;width:900px;background:#fff;padding:28px;font-family:DM Sans,Arial,sans-serif;font-size:13px;color:#0f172a';
+  div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #0f1e3d"><div><div style="font-size:22px;font-weight:900;color:#0f1e3d">🚐 Flota LIS Liviana</div><div style="font-size:13px;color:#64748b;margin-top:2px">Disponibilidad del día · ${fmtF(d.fecha)}</div></div><div style="text-align:right;font-size:11px;color:#94a3b8">Generado: ${fmtF(today())}</div></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+      <div style="background:#eff6ff;border-radius:10px;padding:12px;border-top:3px solid #2563eb"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Total</div><div style="font-size:28px;font-weight:900;font-family:monospace">${d.total}</div></div>
+      <div style="background:#ecfdf5;border-radius:10px;padding:12px;border-top:3px solid #059669"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Disponibles</div><div style="font-size:28px;font-weight:900;color:#059669;font-family:monospace">${disp}</div><div style="font-size:11px;color:#64748b">${pct}%</div></div>
+      <div style="background:#fff7ed;border-radius:10px;padding:12px;border-top:3px solid #ea580c"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">En taller</div><div style="font-size:28px;font-weight:900;color:#ea580c;font-family:monospace">${enN}</div></div>
+      <div style="background:#fffbeb;border-radius:10px;padding:12px;border-top:3px solid #d97706"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Retornados</div><div style="font-size:28px;font-weight:900;color:#d97706;font-family:monospace">${d.retornados.length}</div></div>
+      <div style="background:#f5f3ff;border-radius:10px;padding:12px;border-top:3px solid #7c3aed"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">OP</div><div style="font-size:28px;font-weight:900;color:#7c3aed;font-family:monospace">${d.op!=null?d.op:'—'}</div></div>
+    </div>
+    <div style="margin-bottom:18px"><div style="font-size:12px;font-weight:800;text-transform:uppercase;margin-bottom:8px">🔧 En taller (${activos.length})</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#0f1e3d;color:#fff"><th style="padding:7px 8px;text-align:left;font-size:10px">Placa</th><th style="padding:7px 8px;text-align:left;font-size:10px">Ingreso</th><th style="padding:7px 8px;text-align:left;font-size:10px">Novedad</th><th style="padding:7px 8px;text-align:left;font-size:10px">Status</th><th style="padding:7px 8px;text-align:left;font-size:10px">Taller</th><th style="padding:7px 8px;text-align:left;font-size:10px">Días</th></tr></thead><tbody>${tallerRows}</tbody></table>
+    </div>
+    <div><div style="font-size:12px;font-weight:800;text-transform:uppercase;margin-bottom:8px">✅ Retornados hoy (${d.retornados.length})</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#059669;color:#fff"><th style="padding:7px 8px;text-align:left;font-size:10px">Placa</th><th style="padding:7px 8px;text-align:left;font-size:10px">Ingreso</th><th style="padding:7px 8px;text-align:left;font-size:10px">Reparación</th><th style="padding:7px 8px;text-align:left;font-size:10px">Fecha retorno</th></tr></thead><tbody>${retRows}</tbody></table>
+    </div>`;
+  document.body.appendChild(div);
+  try{const canvas=await html2canvas(div,{scale:2,useCORS:true,backgroundColor:'#fff',width:900,windowWidth:900});const link=document.createElement('a');link.download=`LIS_${fmtF(d.fecha).replace(/\//g,'-')}.png`;link.href=canvas.toDataURL('image/png');link.click();toast('Imagen guardada','✅');}
+  catch(e){console.error(e);toast('Error al generar imagen','❌');}
+  finally{document.body.removeChild(div);}
+}
+
+// ═══════════════════════════════════════════════
+//  PDF
+// ═══════════════════════════════════════════════
+async function generarPDF(){
+  if(!state.days.length){toast('Sin datos para el informe','⚠️');return;}
+  toast('Generando PDF…','📄');
+  let days=state.days;const now=new Date();const mesKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const mesActualDays=days.filter(d=>d.fecha.startsWith(mesKey));if(mesActualDays.length)days=mesActualDays;
+  const nomM=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const[y,mo]=mesKey.split('-');const periodoLabel=`${nomM[+mo]} ${y}`;
+  const iL=days.map(d=>getDispInfo(d));
+  const avgPct=(iL.reduce((a,i)=>a+i.pct,0)/iL.length).toFixed(1);
+  const diasMeta=iL.filter(i=>i.enTaller<=META_TALLER).length;const pctMeta=Math.round(diasMeta/iL.length*100);
+  const avgTaller=(iL.reduce((a,i)=>a+i.enTaller,0)/iL.length).toFixed(1);
+  const lastDay=days[days.length-1];
+  const sm={};days.forEach(d=>d.placasEnTaller.forEach(p=>{const s=getSist(p.novedad,p.sistema);sm[s]=(sm[s]||0)+1;}));
+  const topSist=Object.entries(sm).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const pmEvt={};days.forEach(d=>d.placasEnTaller.forEach(p=>{const key=p.placa+'|'+(p.fechaIngreso||'');if(!pmEvt[key]||p.diasEnTaller>pmEvt[key].dias)pmEvt[key]={placa:p.placa,dias:p.diasEnTaller};}));
+  const pmAgg={};Object.values(pmEvt).forEach(v=>{pmAgg[v.placa]=(pmAgg[v.placa]||0)+v.dias;});
+  const topPlacas=Object.entries(pmAgg).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const colorDisp=+avgPct>=90?'#059669':+avgPct>=85?'#d97706':'#dc2626';
+  const colorMeta=pctMeta>=80?'#059669':pctMeta>=60?'#d97706':'#dc2626';
+
+  const div=document.createElement('div');
+  div.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Arial,sans-serif;font-size:12px;color:#0f172a;padding:32px';
+  div.innerHTML=`
+    <div style="background:#0f1e3d;color:#fff;padding:24px 28px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:24px;font-weight:900;margin-bottom:4px">🚐 Flota LIS Liviana</div><div style="font-size:14px;color:#94a3b8">Informe Ejecutivo de Disponibilidad</div><div style="font-size:16px;font-weight:700;color:#60a5fa;margin-top:6px">${periodoLabel}</div></div>
+      <div style="text-align:right"><div style="font-size:11px;color:#94a3b8">Generado el</div><div style="font-size:13px;font-weight:700">${fmtF(today())}</div><div style="font-size:11px;color:#94a3b8;margin-top:4px">${days.length} días analizados</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      <div style="background:#ecfdf5;border-radius:10px;padding:14px;border-top:3px solid #059669;text-align:center"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Disponibilidad promedio</div><div style="font-size:32px;font-weight:900;color:${colorDisp};font-family:monospace">${avgPct}%</div><div style="font-size:10px;color:#64748b">Meta: ≥90%</div></div>
+      <div style="background:#eff6ff;border-radius:10px;padding:14px;border-top:3px solid #2563eb;text-align:center"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Días en meta (≤${META_TALLER} taller)</div><div style="font-size:32px;font-weight:900;color:${colorMeta};font-family:monospace">${pctMeta}%</div><div style="font-size:10px;color:#64748b">${diasMeta}/${days.length} días</div></div>
+      <div style="background:#fff7ed;border-radius:10px;padding:14px;border-top:3px solid #ea580c;text-align:center"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Promedio en taller</div><div style="font-size:32px;font-weight:900;color:#ea580c;font-family:monospace">${avgTaller}</div><div style="font-size:10px;color:#64748b">vehículos/día</div></div>
+      <div style="background:#f8fafc;border-radius:10px;padding:14px;border-top:3px solid #64748b;text-align:center"><div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">Flota total</div><div style="font-size:32px;font-weight:900;color:#0f1e3d;font-family:monospace">${lastDay.total}</div><div style="font-size:10px;color:#64748b">vehículos</div></div>
+    </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:18px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:10px">📋 Estado actual — ${fmtF(lastDay.fecha)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;font-weight:700;margin-bottom:6px">En taller (${lastDay.placasEnTaller.filter(p=>!p.retornado).length}):</div>
+          ${lastDay.placasEnTaller.filter(p=>!p.retornado).map(p=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px"><span style="font-weight:700;font-family:monospace;background:#dbeafe;padding:1px 5px;border-radius:3px">${p.placa}</span><span style="color:#64748b">${p.novedad||'—'}</span><span style="font-weight:700;color:${p.diasEnTaller>=10?'#dc2626':'#d97706'}">${p.diasEnTaller}d</span></div>`).join('')||'<div style="color:#059669;font-size:11px">✅ Sin vehículos en taller</div>'}
+        </div>
+        <div><div style="font-size:11px;font-weight:700;margin-bottom:6px">Retornados hoy (${lastDay.retornados.length}):</div>
+          ${lastDay.retornados.map(r=>`<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;font-size:11px"><span style="font-weight:700;font-family:monospace;background:#dcfce7;padding:1px 5px;border-radius:3px">${r.placa}</span><span style="color:#64748b">${r.reparacion||'—'}</span></div>`).join('')||'<div style="color:#64748b;font-size:11px">Ninguno retornó hoy</div>'}
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">⚙️ Sistemas más afectados</div>
+        ${topSist.map(([s,n],i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f1f5f9"><div style="width:18px;height:18px;border-radius:50%;background:${i===0?'#f59e0b':i===1?'#94a3b8':'#b45309'};color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">${i+1}</div><div style="flex:1;font-size:11px;font-weight:600">${s}</div><div style="font-family:monospace;font-size:11px;font-weight:800;color:#ea580c">${n}</div></div>`).join('')}
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:8px">🚐 Top placas en taller</div>
+        ${topPlacas.map(([p,d],i)=>`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f1f5f9"><div style="width:18px;height:18px;border-radius:50%;background:${i===0?'#f59e0b':i===1?'#94a3b8':'#b45309'};color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">${i+1}</div><div style="flex:1;font-family:monospace;font-size:11px;font-weight:700;background:#dbeafe;padding:1px 6px;border-radius:3px;display:inline-block">${p}</div><div style="font-family:monospace;font-size:11px;font-weight:800;color:${d>=10?'#dc2626':'#d97706'}">${d}d</div></div>`).join('')}
+      </div>
+    </div>
+    <div style="border-top:2px solid #e2e8f0;padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:10px;color:#94a3b8">Flota LIS Liviana · Control de disponibilidad</div>
+      <div style="font-size:10px;color:#94a3b8">Generado automáticamente · ${fmtF(today())}</div>
+    </div>`;
+  document.body.appendChild(div);
+  try{
+    const canvas=await html2canvas(div,{scale:2,useCORS:true,backgroundColor:'#fff',width:794,windowWidth:794});
+    const imgData=canvas.toDataURL('image/jpeg',.92);const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pdfW=pdf.internal.pageSize.getWidth();const pdfH=pdf.internal.pageSize.getHeight();
+    const imgH=(canvas.height*pdfW)/canvas.width;let yy=0;
+    while(yy<imgH){if(yy>0)pdf.addPage();pdf.addImage(imgData,'JPEG',0,-yy,pdfW,imgH);yy+=pdfH;}
+    pdf.save(`INFORME_LIS_${periodoLabel.replace(' ','_')}.pdf`);toast('PDF descargado','📄');
+  }catch(e){console.error(e);toast('Error generando PDF','❌');}
+  finally{document.body.removeChild(div);}
+}
+
+// ═══════════════════════════════════════════════
+//  BACKUP / RESTORE
+// ═══════════════════════════════════════════════
+function doBackup(){
+  if(!state.days.length){toast('No hay datos','⚠️');return;}
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`lis_backup_${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+  toast('Respaldo guardado','💾');
+}
+function doImport(e){
+  if(!isEditor){toast('Solo editores pueden restaurar','🔒');return;}
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const raw=JSON.parse(ev.target.result);let days=Array.isArray(raw)?raw:(raw.days&&Array.isArray(raw.days)?raw.days:null);
+      if(!days)throw new Error('Formato inválido.');if(!days.length)throw new Error('Archivo vacío.');
+      if(!confirm(`¿Restaurar ${days.length} días desde "${file.name}"?`))return;
+      days=days.map(d=>{const n={fecha:d.fecha||'',total:d.total||15,op:d.op!==undefined?d.op:null,placasEnTaller:Array.isArray(d.placasEnTaller)?d.placasEnTaller:[],retornados:Array.isArray(d.retornados)?d.retornados:[],pendientes:Array.isArray(d.pendientes)?d.pendientes:[],novedadesConductores:Array.isArray(d.novedadesConductores)?d.novedadesConductores:[]};const enT=n.placasEnTaller.filter(p=>!p.retornado).length;const disp=n.total-enT;n.snapshot={disp,enTaller:enT,pct:Math.round(disp/n.total*100)};return n;});
+      days.sort((a,b)=>a.fecha.localeCompare(b.fecha));state={days};saveLocal();closeM('m-imp');curIdx=null;renderSidebar();
+      document.getElementById('welcome').style.display='';document.getElementById('day-view').style.display='none';
+      if(state.days.length)selectDay(state.days.length-1);
+      if(db&&fbOnline&&confirm('¿También sincronizar con Firebase?'))pushAllToFirebase();
+      toast(`${state.days.length} días restaurados`,'📂');
+    }catch(err){alert('❌ Error: '+err.message);}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+// ═══════════════════════════════════════════════
+//  EXCEL
+// ═══════════════════════════════════════════════
+function doExcel(){
+  if(!state.days.length){toast('No hay datos','⚠️');return;}
+  const wb=XLSX.utils.book_new();
+  const res=[['RESUMEN DISPONIBILIDAD DE FLOTA – FLOTA LIS LIVIANA'],[],['FECHA','TOTAL','DISPONIBLES','EN TALLER',`META (≤${META_TALLER})`,'% OP','OP','OP vs DISP.','RETORNADOS']];
+  state.days.forEach(d=>{const info=getDispInfo(d);const meta=info.enTaller<=META_TALLER?'✅ OK':`⚠️ +${info.enTaller-META_TALLER}`;const op=d.op!=null?d.op:'';const opD=d.op!=null?(d.op-info.disp>0?`+${d.op-info.disp}`:d.op-info.disp<0?`${d.op-info.disp}`:'Exacto'):'';res.push([fmtF(d.fecha),d.total,info.disp,info.enTaller,meta,info.pct+'%',op,opD,d.retornados.length]);});
+  const wsr=XLSX.utils.aoa_to_sheet(res);wsr['!cols']=[{wch:14},{wch:7},{wch:11},{wch:10},{wch:12},{wch:8},{wch:6},{wch:12},{wch:11}];XLSX.utils.book_append_sheet(wb,wsr,'RESUMEN');
+  state.days.forEach(d=>{const info=getDispInfo(d);const act=d.placasEnTaller.filter(p=>!p.retornado);const rows=[['FLOTA LIS LIVIANA'],[],['FECHA',fmtF(d.fecha),'','TOTAL',d.total,'DISP',info.disp,'TALLER',info.enTaller,'OP',d.op!=null?d.op:'N/R','%',info.pct+'%'],[],['PLACAS EN TALLER'],['PLACA','INGRESO','NOVEDAD','STATUS','TALLER','DÍAS']];act.forEach(p=>rows.push([p.placa,fmtF(p.fechaIngreso),p.novedad,p.status,p.taller,p.diasEnTaller]));rows.push([],['RETORNADOS'],['PLACA','INGRESO','REPARACIÓN','TALLER','ENTREGA']);d.retornados.forEach(r=>rows.push([r.placa,fmtF(r.fechaIngreso),r.reparacion,r.taller,fmtF(r.fechaEntrega)]));const ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,fmtF(d.fecha).replace(/\//g,'-'));});
+  const f=fmtF(state.days[0].fecha).replace(/\//g,'-');const l=fmtF(state.days[state.days.length-1].fecha).replace(/\//g,'-');XLSX.writeFile(wb,`LIS_LIVIANA_${f}_${l}.xlsx`);toast('Excel exportado','⬇');
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+isEditor=checkAuth();setEditorMode(isEditor);
+renderSidebar();if(state.days.length)selectDay(state.days.length-1);
+initFirebase();
+function updateMobNav(){const nav=document.getElementById('mob-nav');if(!nav)return;if(window.innerWidth<=768){nav.removeAttribute('hidden');nav.style.display='flex';}else{nav.setAttribute('hidden','');nav.style.display='none';}}
+updateMobNav();window.addEventListener('resize',updateMobNav);
+</script>
+</body>
+</html>
